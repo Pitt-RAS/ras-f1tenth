@@ -109,7 +109,6 @@ public:
         
         if( shared != NULL )
         {
-            ROS_INFO("Scan frame id: %f", shared->header.frame_id); 
             lidar.scan_inc = shared->angle_increment;
             lidar.max_angle = shared->angle_max; 
             lidar.min_angle = shared->angle_min; 
@@ -124,8 +123,8 @@ public:
             ROS_INFO("Max Andgle:\t%f", lidar.max_angle); 
             ROS_INFO("Scan Incr:\t%f", lidar.scan_inc);  
             ROS_INFO("Num scans:\t%d", lidar.num_scans); 
-            ROS_INFO(""); 
-        } 
+            ROS_INFO("");
+        }
 
         /*
         One publisher should publish to the /brake topic with an
