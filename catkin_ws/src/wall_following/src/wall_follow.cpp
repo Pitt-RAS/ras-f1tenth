@@ -9,7 +9,6 @@
  * @copyright Copyright (c) 2022
  *
  */
-
 #include <ros/ros.h>
 
 #include <sensor_msgs/Image.h>
