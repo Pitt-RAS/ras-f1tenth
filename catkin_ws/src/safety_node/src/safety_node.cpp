@@ -124,7 +124,7 @@ public:
             ROS_INFO("Scan Incr:\t%f", lidar.scan_inc);  
             ROS_INFO("Num scans:\t%d", lidar.num_scans); 
             ROS_INFO("");
-        }
+        } 
 
         /*
         One publisher should publish to the /brake topic with an
@@ -189,9 +189,11 @@ public:
                 auto ttc = (scan_msg->ranges[i] - car_perimeter[i])/r_hat; 
 
                 if( ttc < ttc_threshold  && (ttc>=0.0)) 
+
                 { 
                     // if(!brake_msg.brake.data)
                     // {
+
                     brake_msg.brake.data = true; 
                     speed_pub.publish(brake_msg.speed); 
                     brake_pub.publish(brake_msg.brake); 
