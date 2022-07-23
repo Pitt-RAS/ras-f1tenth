@@ -124,7 +124,11 @@ public:
             ROS_INFO("Scan Incr:\t%f", lidar.scan_inc);  
             ROS_INFO("Num scans:\t%d", lidar.num_scans); 
             ROS_INFO("");
+<<<<<<< HEAD
         }
+=======
+        } 
+>>>>>>> main
 
         /*
         One publisher should publish to the /brake topic with an
@@ -192,10 +196,12 @@ public:
                 { 
                     // if(!brake_msg.brake.data)
                     // {
+
                     brake_msg.brake.data = true; 
                     speed_pub.publish(brake_msg.speed); 
                     brake_pub.publish(brake_msg.brake); 
                     ROS_INFO("E-BRAKE:\t(angle)%f", scan_msg->angle_min +i*scan_msg->angle_increment); 
+                    
                     // }
                 }
             }
