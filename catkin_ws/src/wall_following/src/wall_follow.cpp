@@ -10,16 +10,13 @@
  *
  */
 
-<<<<<<< HEAD
-#include <ros/ros.h> 
-=======
 #include <ros/ros.h>
->>>>>>> main
 
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/LaserScan.h>
 #include <ackermann_msgs/AckermannDriveStamped.h>
 #include <ackermann_msgs/AckermannDrive.h>
+
 #include <std_msgs/Int32MultiArray.h>
 #include <nav_msgs/Odometry.h>
 
@@ -35,6 +32,7 @@
  * - Add logic to solve for L with odometry
  * - Take all structs and put them in a header file for cleanliness
  */
+
 
 class WallFollow
 {
