@@ -29,6 +29,7 @@ class WallFollow
         ros::NodeHandle n; 
         ros::Publisher drive_pub; 
         ros::Subscriber scan_sub, mux_sub; 
+        ros::Time curr_time; 
 
         std::string drive_topic; 
 
@@ -124,6 +125,7 @@ class WallFollow
             auto alpha = std::atan((a*std::cos(theta)-b)/(a*std::sin(theta))); 
             auto dt = b*std::cos(alpha); 
 
+            
             // auto dt_1 = dt + L*std::sin(alpha) // L needs to be defined using odometry!!!
             // ROS_INFO_ONCE("D_t = %f", dt); 
             // ROS_INFO_ONCE("b = %f", b); 
@@ -147,15 +149,7 @@ class WallFollow
 int main(int argc, char **argv) 
 {
     ros::init(argc, argv, "wall_follow");
-    
     WallFollow w; 
-    ros::Rate(w.getRate()); 
-
-    while(1) 
-    {
-        while(w.getStatus()) { ros::spinOnce(); }
-    }
-
-    // ros::spin(); 
+    ros::spin(); 
     return 0; 
 }
