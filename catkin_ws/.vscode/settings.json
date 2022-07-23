@@ -1,0 +1,8 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/nate/RAS/F1Tenth_2021-2022/catkin_ws/devel/lib/python3/dist-packages",
+        "/home/nate/RAS/f1tenth/devel/lib/python3/dist-packages",
+        "/home/nate/RAS/RASA-Drone/devel/lib/python3/dist-packages",
+        "/opt/ros/noetic/lib/python3/dist-packages"
+    ]
+}
