@@ -4,5 +4,5 @@ c+p.cmd
 *build/
 *devel/
 *logs/
-.vscode
-.catkin_tools
+.vscode/
+.catkin_tools/
