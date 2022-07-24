@@ -148,7 +148,10 @@ class WallFollow
             auto dist = (ros::Time::now() - curr_time).sec;
             auto L = drive.drive.speed*dt;
             auto dist_1 = dt + L*std::sin(alpha);
-
+            // ROS_INFO("");
+            // ROS_INFO("Dist_1: %f", dist_1); 
+            // ROS_INFO("Scan @ 90deg: %f", b);
+            // ROS_INFO("");
             auto err = sp - dist_1; 
             if(enabled)
                 pid_control(err, dt);
@@ -163,23 +166,24 @@ class WallFollow
             d = (err-prev_err)/dt;
 
             // Once again - instantiate these somewhere else
-            auto steer_angle = gains.kp*p + gains.ki*i + gains.kd*d;
+            auto steer_angle = -(gains.kp*p + gains.ki*i + gains.kd*d);
             auto abs_steer_angle = std::abs(steer_angle);
             ROS_INFO("steering angle u(t): %.2f\r", steer_angle); 
 
-            if(abs_steer_angle >= 0.0 && abs_steer_angle<10.0)
-                // speed = 1.5;
-                drive.drive.speed = 1.5; 
-            else if(abs_steer_angle>=10.0 && abs_steer_angle<=20.0)
-                // speed = 1.0;
-                drive.drive.speed = 1.0; 
-            else
-                // speed = 0.5;
-                drive.drive.speed = 0.5; 
-
+            // this has to be in radians (its not)
+            // if(abs_steer_angle >= 0.0 && abs_steer_angle<10.0)
+            //     // speed = 1.5;
+            //     drive.drive.speed = 1.5; 
+            // else if(abs_steer_angle>=10.0 && abs_steer_angle<=20.0)
+            //     // speed = 1.0;
+            //     drive.drive.speed = 1.0; 
+            // else
+            //     // speed = 0.5;
+            //     drive.drive.speed = 0.5; 
+            drive.drive.speed = 0.5;
             drive.header.stamp = ros::Time::now(); 
             drive.header.frame_id = "drive";
-            drive.drive.steering_angle = -steer_angle; 
+            drive.drive.steering_angle = steer_angle; 
             drive.drive.steering_angle_velocity = 0.0; 
 
             drive_pub.publish(drive); 
