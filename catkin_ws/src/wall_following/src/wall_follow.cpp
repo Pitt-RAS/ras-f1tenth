@@ -60,7 +60,7 @@ class WallFollow
         double p,i,d;
 
         int a_idx, b_idx;
-        double L, theta = pi/4.0; // [theta = 45 deg] (0 < theta < 70deg)
+        double L, theta = 60.0*pi/180.0; // [theta = 60 deg] (0 < theta < 70deg)
 
     public:
         WallFollow():
@@ -116,10 +116,14 @@ class WallFollow
             // to the left of the front of the car _|
             b_idx = (int)round((pi/2.0-lidar_data.min_angle)/lidar_data.scan_inc);
             a_idx = (int)round((((pi/2.0)-theta)-lidar_data.min_angle)/lidar_data.scan_inc);
+            ROS_INFO("Scanning data at angles %f - %f", 
+                lidar_data.min_angle + (lidar_data.scan_inc*a_idx),
+                lidar_data.min_angle + (lidar_data.scan_inc*b_idx)); 
 
             // Update theta to be MORE accurate due to rounding errors in finding our idx
-            theta = lidar_data.scan_inc*(a_idx - b_idx);
-            
+            theta = lidar_data.scan_inc*(b_idx - a_idx);
+            ROS_INFO("Theta: %f", theta); 
+
             drive.drive.speed=0.0; 
             curr_time = ros::Time::now();
         }
@@ -167,20 +171,20 @@ class WallFollow
 
             // Once again - instantiate these somewhere else
             auto steer_angle = -(gains.kp*p + gains.ki*i + gains.kd*d);
-            auto abs_steer_angle = std::abs(steer_angle);
+            auto steer_ang_deg = steer_angle*(180.0/pi); 
+            auto abs_steer_ang_deg = std::abs(steer_ang_deg);
             ROS_INFO("steering angle u(t): %.2f\r", steer_angle); 
 
-            // this has to be in radians (its not)
-            // if(abs_steer_angle >= 0.0 && abs_steer_angle<10.0)
-            //     // speed = 1.5;
-            //     drive.drive.speed = 1.5; 
-            // else if(abs_steer_angle>=10.0 && abs_steer_angle<=20.0)
-            //     // speed = 1.0;
-            //     drive.drive.speed = 1.0; 
-            // else
-            //     // speed = 0.5;
-            //     drive.drive.speed = 0.5; 
-            drive.drive.speed = 0.5;
+            if(abs_steer_ang_deg >= 0.0 && abs_steer_ang_deg<10.0)
+                // speed = 1.5;
+                drive.drive.speed = 1.5; 
+            else if(abs_steer_ang_deg>=10.0 && abs_steer_ang_deg<=20.0)
+                // speed = 1.0;
+                drive.drive.speed = 1.0; 
+            else
+                // speed = 0.5;
+                drive.drive.speed = 0.5; 
+            
             drive.header.stamp = ros::Time::now(); 
             drive.header.frame_id = "drive";
             drive.drive.steering_angle = steer_angle; 
