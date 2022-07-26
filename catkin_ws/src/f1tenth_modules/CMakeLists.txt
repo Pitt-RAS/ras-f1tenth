@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(point_dist)
+project(f1tenth_modules)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -105,8 +105,8 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
  INCLUDE_DIRS include
- LIBRARIES point_dist
- CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
+ LIBRARIES f1tenth_modules
+ CATKIN_DEPENDS roscpp std_msgs message_runtime
  DEPENDS system_lib
 )
 
@@ -123,18 +123,28 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/point_dist.cpp
+#   src/${PROJECT_NAME}/f1tenth_modules.cpp
 # )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
+set( src_nodes 
+  node/point_dist.cpp
+  node/safety_node.cpp
+  node/wall_follow.cpp
+)
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(point_dist src/point_dist.cpp)
+foreach( src_file ${src_nodes} )
+  # string(REGEX REPLACE "\\.[^.]*$" "" BASENAME ${src_file})
+  get_filename_component(src_name ${src_file} NAME_WE)
+  add_executable(${src_name} ${src_file})
+  target_link_libraries(${src_name} ${catkin_LIBRARIES})
+endforeach()
+
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -147,9 +157,9 @@ add_executable(point_dist src/point_dist.cpp)
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(point_dist
-  ${catkin_LIBRARIES}
-)
+# target_link_libraries(${PROJECT_NAME}_node
+#   ${catkin_LIBRARIES}
+# )
 
 #############
 ## Install ##
@@ -198,7 +208,7 @@ target_link_libraries(point_dist
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_point_dist.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_f1tenth_modules.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

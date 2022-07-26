@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include <point_dist/PointDist.h>
+#include <f1tenth_modules/PointDist.h>
 #include <sensor_msgs/LaserScan.h>
 #include <algorithm>
 #include <math.h>
@@ -18,13 +18,13 @@ public:
     {
         ROS_INFO("Setting up point distance node.");
         scan = nh.subscribe("/scan", 1, &PointDist::scan_cb, this);
-        max_pub = nh.advertise<point_dist::PointDist>("/farthest_point", 1);
-        min_pub = nh.advertise<point_dist::PointDist>("/closest_point", 1);
+        max_pub = nh.advertise<f1tenth_modules::PointDist>("/farthest_point", 1);
+        min_pub = nh.advertise<f1tenth_modules::PointDist>("/closest_point", 1);
     }
 
     void scan_cb( const sensor_msgs::LaserScan & msg )
     {
-        point_dist::PointDist max, min;
+        f1tenth_modules::PointDist max, min;
 
         // Initiate inital mins and max
         max.distance = msg.ranges[0];
