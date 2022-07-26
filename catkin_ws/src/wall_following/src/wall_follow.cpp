@@ -111,8 +111,7 @@ class WallFollow
             scan_sub = n.subscribe("/scan", 1, &WallFollow::lidar_cb, this);
             mux_sub = n.subscribe("/mux", 1, &WallFollow::mux_cb, this);
 
-            // We want this to index the angle thats oerrar_data.min_angle)/lidar_data.scan_inc);
-             // We want this index the angle thats orthogonally
+            // We want this index the angle thats orthogonally
             // to the left of the front of the car _|
             b_idx = (int)round((pi/2.0-lidar_data.min_angle)/lidar_data.scan_inc);
             a_idx = (int)round((((pi/2.0)-theta)-lidar_data.min_angle)/lidar_data.scan_inc);
@@ -152,11 +151,8 @@ class WallFollow
             auto dist = (ros::Time::now() - curr_time).sec;
             auto L = drive.drive.speed*dt;
             auto dist_1 = dt + L*std::sin(alpha);
-            // ROS_INFO("");
-            // ROS_INFO("Dist_1: %f", dist_1); 
-            // ROS_INFO("Scan @ 90deg: %f", b);
-            // ROS_INFO("");
             auto err = sp - dist_1; 
+
             if(enabled)
                 pid_control(err, dt);
             prev_err = err; 
@@ -164,7 +160,9 @@ class WallFollow
         }
 
         void pid_control(const double &err, const double &dt)
-        {
+        {   
+            ROS_INFO("Error: %f", err); 
+
             p = err;
             i += err; // may need to be clamped
             d = (err-prev_err)/dt;
@@ -173,16 +171,14 @@ class WallFollow
             auto steer_angle = -(gains.kp*p + gains.ki*i + gains.kd*d);
             auto steer_ang_deg = steer_angle*(180.0/pi); 
             auto abs_steer_ang_deg = std::abs(steer_ang_deg);
-            ROS_INFO("steering angle u(t): %.2f\r", steer_angle); 
+            // ROS_INFO("steering angle u(t): %.2f\r", steer_angle); 
 
             if(abs_steer_ang_deg >= 0.0 && abs_steer_ang_deg<10.0)
-                // speed = 1.5;
                 drive.drive.speed = 1.5; 
             else if(abs_steer_ang_deg>=10.0 && abs_steer_ang_deg<=20.0)
-                // speed = 1.0;
+                
                 drive.drive.speed = 1.0; 
             else
-                // speed = 0.5;
                 drive.drive.speed = 0.5; 
             
             drive.header.stamp = ros::Time::now(); 
