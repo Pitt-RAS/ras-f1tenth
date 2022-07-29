@@ -141,6 +141,8 @@ class WallFollow
 
         void lidar_cb(const sensor_msgs::LaserScan &msg)
         {
+            // auto pidStartTime = ros::Time::now();
+
             /////!!!!! NEED TO FILTER FOR BAD DISTANCES (inf &&&& <0)
             auto a = msg.ranges[aIdx];
             auto b = msg.ranges[bIdx];
