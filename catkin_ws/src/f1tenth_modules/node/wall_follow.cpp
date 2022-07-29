@@ -24,6 +24,7 @@
 
 #include <cmath>
 #include <f1tenth_modules/f1tenthUtils.hpp>
+
 #define pi M_PI // lazily avoiding uppercase variables for science
 
 /**
@@ -205,5 +206,4 @@ int main(int argc, char **argv)
         w.spin();
         rate.sleep();
     }
-
 }
