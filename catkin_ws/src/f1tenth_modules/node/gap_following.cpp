@@ -30,6 +30,7 @@ class GapFollowing
         lidarIntrinsics lidarData;
 
         int muxIdx;
+        int startIdx, endIdx; 
         bool enabled;
 
     public:
@@ -51,6 +52,9 @@ class GapFollowing
         // subs
         scanSub = n.subscribe("/scan", 1, &GapFollowing::scan_cb, this);
         muxSub = n.subscribe("mux", 1, &GapFollowing::mux_cb, this);
+        
+        startIdx = getScanIdx((-pi/2.0), lidarData); 
+        endIdx = getScanIdx((pi/2.0), lidarData); 
 
     }
 
@@ -59,9 +63,23 @@ class GapFollowing
         enabled = msg.data[muxIdx];
     }
 
-    void scan_cb(const sensor_msgs::LaserScan &msg)
+    // 
+    // Do we want a copy or a reference of the LaserScan object?
+    //
+    void scan_cb(sensor_msgs::LaserScan &msg)
     {
+        auto minScanRange = msg.range_max; 
+        std::pair <unsigned, double> closestPoint; 
+        // Limit scans from -pi/2 -> pi/2 
+        for(unsigned i = startIdx; i < endIdx; i++)
+        {
+            if (msg.ranges[i] < minScanRange)
+            {
+                closestPoint.first = i; 
+                closestPoint.second = msg.ranges[i]; 
+            }
 
+        }
     }
 };
 

@@ -82,8 +82,10 @@ class WallFollowing
 
             // We want this index the angle thats orthogonally
             // to the left of the front of the car _|
-            bIdx = (int)round((pi/2.0-lidarData.min_angle)/lidarData.scan_inc);
-            aIdx = (int)round((((pi/2.0)-theta)-lidarData.min_angle)/lidarData.scan_inc);
+            // bIdx = (int)round((pi/2.0-lidarData.min_angle)/lidarData.scan_inc);
+            // aIdx = (int)round((((pi/2.0)-theta)-lidarData.min_angle)/lidarData.scan_inc);
+            bIdx = getScanIdx(pi/2.0, lidarData); 
+            aIdx = getScanIdx((pi/2.0)-theta, lidarData); 
             ROS_INFO("Scanning data at angles %f - %f",
                 lidarData.min_angle + (lidarData.scan_inc*aIdx),
                 lidarData.min_angle + (lidarData.scan_inc*bIdx));
