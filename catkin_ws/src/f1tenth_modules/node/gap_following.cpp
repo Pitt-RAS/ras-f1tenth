@@ -30,7 +30,8 @@ class GapFollowing
         lidarIntrinsics lidarData;
 
         int muxIdx;
-        int startIdx, endIdx; 
+        int startIdx, endIdx;
+        double rb;
         bool enabled;
 
     public:
@@ -45,6 +46,7 @@ class GapFollowing
 
         n.getParam("gap_follow_idx", muxIdx);
         n.getParam("gap_follow_topic", driveTopic);
+        n.getParam("rb", rb);
 
         // pubs
         drivePub = n.advertise<ackermann_msgs::AckermannDriveStamped>(driveTopic, 1);
@@ -52,10 +54,9 @@ class GapFollowing
         // subs
         scanSub = n.subscribe("/scan", 1, &GapFollowing::scan_cb, this);
         muxSub = n.subscribe("mux", 1, &GapFollowing::mux_cb, this);
-        
-        startIdx = getScanIdx((-pi/2.0), lidarData); 
-        endIdx = getScanIdx((pi/2.0), lidarData); 
 
+        startIdx = getScanIdx((-pi/2.0), lidarData);
+        endIdx = getScanIdx((pi/2.0), lidarData);
     }
 
     void mux_cb(const std_msgs::Int32MultiArray &msg)
@@ -63,23 +64,31 @@ class GapFollowing
         enabled = msg.data[muxIdx];
     }
 
-    // 
+    //
     // Do we want a copy or a reference of the LaserScan object?
     //
     void scan_cb(sensor_msgs::LaserScan &msg)
     {
-        auto minScanRange = msg.range_max; 
-        std::pair <unsigned, double> closestPoint; 
-        // Limit scans from -pi/2 -> pi/2 
-        for(unsigned i = startIdx; i < endIdx; i++)
-        {
-            if (msg.ranges[i] < minScanRange)
-            {
-                closestPoint.first = i; 
-                closestPoint.second = msg.ranges[i]; 
-            }
+        auto closestPoint = std::make_pair(-1, msg.range_max);
 
+        // Limit scans from -pi/2 -> pi/2
+        for(size_t i = startIdx; i <= endIdx; i++)
+        {
+            if (msg.ranges[i] < closestPoint.second)
+            {
+                closestPoint.first = i;
+                closestPoint.second = msg.ranges[i];
+            }
         }
+
+        if(closestPoint.first < 0)
+            return;
+
+        // calculate bubble ranges
+        auto theta = std::acos(rb/closestPoint.second);
+        auto bubbleStartIdx = getScanIdx(closestPoint.first*lidarData.scan_inc + theta, lidarData);
+        auto bubbleEndIdx = getScanIdx(closestPoint.first*lidarData.scan_inc - theta, lidarData);
+
     }
 };
 
