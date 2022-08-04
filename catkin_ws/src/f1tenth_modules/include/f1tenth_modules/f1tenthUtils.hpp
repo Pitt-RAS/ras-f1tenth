@@ -30,6 +30,13 @@ struct lidarIntrinsics
     bool valid;
 };
 
+struct pointScan 
+{
+    double dist; 
+    double angle; //radians
+    size_t idx; 
+}; 
+
 lidarIntrinsics getLidarInfoFromTopic(ros::NodeHandle &n ,const std::string &topic)
 {
     boost::shared_ptr<const sensor_msgs::LaserScan>

@@ -28,6 +28,7 @@ class GapFollowing
         std::string driveTopic;
 
         lidarIntrinsics lidarData;
+        pointScan closestPoint; 
 
         int muxIdx;
         int startIdx, endIdx;
@@ -69,26 +70,36 @@ class GapFollowing
     //
     void scan_cb(sensor_msgs::LaserScan &msg)
     {
-        auto closestPoint = std::make_pair(-1, msg.range_max);
+        auto minPoint = std::make_pair(-1, msg.range_max);
 
         // Limit scans from -pi/2 -> pi/2
         for(size_t i = startIdx; i <= endIdx; i++)
         {
-            if (msg.ranges[i] < closestPoint.second)
+            if (msg.ranges[i] < point.second)
             {
-                closestPoint.first = i;
-                closestPoint.second = msg.ranges[i];
+                minPoint.first = i;
+                minPoint.second = msg.ranges[i];            
             }
         }
-
-        if(closestPoint.first < 0)
+        
+        if(minPoint.first < 0)
             return;
 
-        // calculate bubble ranges
-        auto theta = std::acos(rb/closestPoint.second);
-        auto bubbleStartIdx = getScanIdx(closestPoint.first*lidarData.scan_inc + theta, lidarData);
-        auto bubbleEndIdx = getScanIdx(closestPoint.first*lidarData.scan_inc - theta, lidarData);
+        closestPoint =
+            {minPoint.first*msg.angle_increment, minPoint.second, minPoint.first;}; 
 
+        // calculate bubble ranges
+        auto theta = std::acos(rb/closestPoint.dist);
+        auto bubbleStartIdx = getScanIdx(closestPoint.angle + theta, lidarData);
+        auto bubbleEndIdx = getScanIdx(closestPoint.angle - theta, lidarData);
+
+        pointScan point; 
+        // Check all points in the scan range of the bubble 
+        for(size_t i = bubbleStartIdx; i <= bubbleEndIdx; i++)
+        {
+            
+        }
+        
     }
 };
 
