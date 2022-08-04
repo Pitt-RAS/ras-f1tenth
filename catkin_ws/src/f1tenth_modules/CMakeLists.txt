@@ -135,6 +135,7 @@ set( src_nodes
   node/point_dist.cpp
   node/safety_node.cpp
   node/wall_following.cpp
+  node/gap_following.cpp
 )
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
