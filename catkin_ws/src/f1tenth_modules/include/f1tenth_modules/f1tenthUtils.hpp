@@ -30,12 +30,12 @@ struct lidarIntrinsics
     bool valid;
 };
 
-struct pointScan 
+struct pointScan
 {
-    double dist; 
+    double dist;
     double angle; //radians
-    size_t idx; 
-}; 
+    size_t idx;
+};
 
 lidarIntrinsics getLidarInfoFromTopic(ros::NodeHandle &n ,const std::string &topic)
 {
@@ -69,14 +69,14 @@ lidarIntrinsics getLidarInfoFromTopic(ros::NodeHandle &n ,const std::string &top
 
 
 /**
- * @brief Returns the index for a given angle in a list of lidar scan ranges 
- * 
+ * @brief Returns the index for a given angle in a list of lidar scan ranges
+ *
  * @param theta The desired angle to find the corresponding index to
  * @param lidarData Lidar data object holding necessary info about each lidar scan
  * @return unsigned The closest index corresponding to the given angle
- * 
+ *
  * @warning This function will return the index corresponding to the CLOSEST index.
- *          It may be necessary to recalculate the angle (theta) with the returned index. 
+ *          It may be necessary to recalculate the angle (theta) with the returned index.
  */
 unsigned getScanIdx(const double &theta, const lidarIntrinsics &lidarData)
 {
