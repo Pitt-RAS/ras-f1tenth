@@ -15,6 +15,8 @@
 #include <ackermann_msgs/AckermannDriveStamped.h>
 #include <ackermann_msgs/AckermannDrive.h>
 #include <std_msgs/Int32MultiArray.h>
+#include <tf2_ros/transform_listener.h>
+#include <visualization_msgs/Marker.h>
 
 #include <f1tenth_modules/f1tenthUtils.hpp>
 
@@ -28,13 +30,16 @@ class WallFollowing
 {
     private:
         ros::NodeHandle n;
-        ros::Publisher drivePub;
+        ros::Publisher drivePub, markerPub;
         ros::Subscriber scanSub, muxSub;
 
-        double dt = 1/60.0;
+        tf2_ros::Buffer tBuffer;
+        tf2_ros::TransformListener tfListener;
+        visualization_msgs::Marker point;
         ackermann_msgs::AckermannDriveStamped drive;
-        std::string driveTopic;
+        geometry_msgs::TransformStamped baseLinkTf;
 
+        std::string driveTopic;
         pidGains gains;
         lidarIntrinsics lidarData;
 
@@ -44,6 +49,7 @@ class WallFollowing
         double sp, prevErr, err;
         double p,i,d;
         double L;
+        double dt = 1/60.0;
         double theta = 70.0*pi/180.0; // [theta = 20 deg] (0 < theta < 70deg)
 
         bool enabled, done;
@@ -55,6 +61,7 @@ class WallFollowing
             enabled(false), done(false),
             prevErr(0.0),
             p(0.0), i(0.0), d(0.0),
+            tfListener(tBuffer),
             n(ros::NodeHandle("~"))
         {
             // Extract  lidar info from one message
@@ -75,6 +82,7 @@ class WallFollowing
 
             // pubs
             drivePub = n.advertise<ackermann_msgs::AckermannDriveStamped>(driveTopic, 1);
+            markerPub = n.advertise<visualization_msgs::Marker>("/dynamic_viz", 10);
 
             // subs
             scanSub = n.subscribe("/scan", 1, &WallFollowing::lidar_cb, this);
@@ -117,6 +125,40 @@ class WallFollowing
             /////!!!!! NEED TO FILTER FOR BAD DISTANCES (inf &&&& <0)
             auto a = msg.ranges[aIdx];
             auto b = msg.ranges[bIdx];
+
+            // Display extracted points on rviz
+            try
+            {
+                baseLinkTf = tBuffer.lookupTransform("base_link", "laser_model", ros::Time(0));
+            }
+            catch (tf2::TransformException &ex)
+            {
+                ROS_WARN("%s", ex.what());
+            }
+
+            //
+            // (TODO) This needs cleaned up especially since the point object is in the scope of the class
+            //
+            point.header.frame_id = "laser";
+            point.header.stamp = ros::Time::now();
+            point.ns = "point";
+            point.action = visualization_msgs::Marker::ADD;
+            point.pose.orientation.w = 1.0;
+            point.id = 0;
+            point.type = visualization_msgs::Marker::POINTS;
+            point.scale.x = point.scale.y = 0.2;
+            point.color.g = 1.0f;
+            point.color.a = 1.0;
+
+            geometry_msgs::Point p;
+
+            auto a_angle = aIdx*msg.angle_increment + msg.angle_min;
+            p.x = baseLinkTf.transform.translation.x + msg.ranges[aIdx]*std::cos(a_angle);
+            p.y = baseLinkTf.transform.translation.y + msg.ranges[aIdx]*std::sin(a_angle);
+            p.z = 0.0;
+            point.points.clear();
+            point.points.push_back(p);
+            markerPub.publish(point);
 
             auto alpha = std::atan((a*std::cos(theta)-b)/(a*std::sin(theta)));
             auto dist_1 = (b*std::cos(alpha)) + (drive.drive.speed*dt)*std::sin(alpha);

@@ -13,6 +13,9 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   message_generation
   roslaunch
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
 )
 roslaunch_add_file_check(launch)
 ## System dependencies are found with CMake's conventions
