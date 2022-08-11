@@ -10,6 +10,7 @@
 #ifndef F1TENTH_UTILS_
 #define F1TENTH_UTILS_
 
+#include <
 #include <cmath>
 
 #define pi M_PI // lazily avoiding uppercase variables for science
@@ -35,6 +36,15 @@ struct pointScan
     double dist;
     double angle; //radians
     size_t idx;
+};
+
+struct rvizOpts
+{
+    std::string frame_id;
+    std::string ns;
+    geometry_msgs::Pose pose;
+    geometry_msgs::Vector3 scale;
+    uint32_t color;
 };
 
 /**

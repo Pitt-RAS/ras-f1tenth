@@ -15,7 +15,7 @@
 #include <ackermann_msgs/AckermannDrive.h>
 #include <std_msgs/Int32MultiArray.h>
 
-#include <f1tenth_modules/f1tenthUtils.hpp>
+#include <f1tenth_modules/f1tenthUtils.hh>
 
 class GapFollowing
 {

@@ -18,7 +18,7 @@
 #include <tf2_ros/transform_listener.h>
 #include <visualization_msgs/Marker.h>
 
-#include <f1tenth_modules/f1tenthUtils.hpp>
+#include <f1tenth_modules/f1tenthUtils.hh>
 
 /**
  * (todo)
@@ -90,8 +90,6 @@ class WallFollowing
 
             // We want this index the angle thats orthogonally
             // to the left of the front of the car _|
-            // bIdx = (int)round((pi/2.0-lidarData.min_angle)/lidarData.scan_inc);
-            // aIdx = (int)round((((pi/2.0)-theta)-lidarData.min_angle)/lidarData.scan_inc);
             bIdx = getScanIdx(pi/2.0, lidarData);
             aIdx = getScanIdx((pi/2.0)-theta, lidarData);
             ROS_INFO("Scanning data at angles %f - %f",
@@ -103,15 +101,15 @@ class WallFollowing
             drive.drive.speed=0.0;
 
             //rviz visualization
-            point.header.frame_id = "laser";
-            // point.header.stamp = ros::Time::now();
+            point.header.frame_id = "laser_model";
+            point.header.stamp = ros::Time::now();
             point.ns = "point";
-            // point.action = visualization_msgs::Marker::ADD;
+            point.action = visualization_msgs::Marker::ADD;
             point.pose.orientation.w = 1.0;
             point.id = 0;
-            // point.type = visualization_msgs::Marker::POINTS;
+            point.type = visualization_msgs::Marker::POINTS;
             point.scale.x = point.scale.y = 0.2;
-            point.color.g = 1.0f;
+            point.color.g = 255.0f;
             point.color.a = 1.0;
         }
 
