@@ -100,8 +100,19 @@ class WallFollowing
 
             // Update theta to be MORE accurate due to rounding errors in finding our idx
             theta = lidarData.scan_inc*(bIdx - aIdx);
-
             drive.drive.speed=0.0;
+
+            //rviz visualization
+            point.header.frame_id = "laser";
+            // point.header.stamp = ros::Time::now();
+            point.ns = "point";
+            // point.action = visualization_msgs::Marker::ADD;
+            point.pose.orientation.w = 1.0;
+            point.id = 0;
+            // point.type = visualization_msgs::Marker::POINTS;
+            point.scale.x = point.scale.y = 0.2;
+            point.color.g = 1.0f;
+            point.color.a = 1.0;
         }
 
 
@@ -139,18 +150,9 @@ class WallFollowing
             //
             // (TODO) This needs cleaned up especially since the point object is in the scope of the class
             //
-            point.header.frame_id = "laser";
-            point.header.stamp = ros::Time::now();
-            point.ns = "point";
-            point.action = visualization_msgs::Marker::ADD;
-            point.pose.orientation.w = 1.0;
-            point.id = 0;
-            point.type = visualization_msgs::Marker::POINTS;
-            point.scale.x = point.scale.y = 0.2;
-            point.color.g = 1.0f;
-            point.color.a = 1.0;
 
             geometry_msgs::Point p;
+            point.header.stamp = ros::Time::now();
 
             auto a_angle = aIdx*msg.angle_increment + msg.angle_min;
             p.x = baseLinkTf.transform.translation.x + msg.ranges[aIdx]*std::cos(a_angle);

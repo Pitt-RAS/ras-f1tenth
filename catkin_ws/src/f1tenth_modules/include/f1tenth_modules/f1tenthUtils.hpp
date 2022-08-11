@@ -37,6 +37,13 @@ struct pointScan
     size_t idx;
 };
 
+/**
+ * @brief Extract lidar instrinsic information from specific topic
+ *
+ * @param n A ROS node to extract the message
+ * @param topic The scan topic relative to the lidar scan subject
+ * @return lidarIntrinsics Data extracted from the lide topic
+ */
 lidarIntrinsics getLidarInfoFromTopic(ros::NodeHandle &n ,const std::string &topic)
 {
     boost::shared_ptr<const sensor_msgs::LaserScan>
