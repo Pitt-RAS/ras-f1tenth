@@ -19,6 +19,7 @@
 #include <visualization_msgs/Marker.h>
 
 #include <f1tenth_modules/f1tenthUtils.hh>
+#include <f1tenth_modules/RvizWrapper.hh>
 
 /**
  * (todo)
@@ -42,6 +43,7 @@ class WallFollowing
         std::string driveTopic;
         pidGains gains;
         lidarIntrinsics lidarData;
+        std::unique_ptr<RvizPoint> rvizPoint;
 
         int muxIdx;
         int aIdx, bIdx;
@@ -50,7 +52,7 @@ class WallFollowing
         double p,i,d;
         double L;
         double dt = 1/60.0;
-        double theta = 70.0*pi/180.0; // [theta = 20 deg] (0 < theta < 70deg)
+        double theta = 70.0*M_PI/180.0; // [theta = 20 deg] (0 < theta < 70deg)
 
         bool enabled, done;
 
@@ -90,8 +92,8 @@ class WallFollowing
 
             // We want this index the angle thats orthogonally
             // to the left of the front of the car _|
-            bIdx = getScanIdx(pi/2.0, lidarData);
-            aIdx = getScanIdx((pi/2.0)-theta, lidarData);
+            bIdx = getScanIdx(M_PI/2.0, lidarData);
+            aIdx = getScanIdx((M_PI/2.0)-theta, lidarData);
             ROS_INFO("Scanning data at angles %f - %f",
                 lidarData.min_angle + (lidarData.scan_inc*aIdx),
                 lidarData.min_angle + (lidarData.scan_inc*bIdx));
@@ -100,17 +102,17 @@ class WallFollowing
             theta = lidarData.scan_inc*(bIdx - aIdx);
             drive.drive.speed=0.0;
 
-            //rviz visualization
-            point.header.frame_id = "laser_model";
-            point.header.stamp = ros::Time::now();
-            point.ns = "point";
-            point.action = visualization_msgs::Marker::ADD;
-            point.pose.orientation.w = 1.0;
-            point.id = 0;
-            point.type = visualization_msgs::Marker::POINTS;
-            point.scale.x = point.scale.y = 0.2;
-            point.color.g = 255.0f;
-            point.color.a = 1.0;
+            geometry_msgs::Pose pose;
+            geometry_msgs::Vector3 scale;
+
+            pose.orientation.w = 1.0;
+            scale.x = scale.y = 0.2;
+
+            rvizOpts opts =
+                {.color=0x00ff00, .frame_id="laser_model", .ns="point",
+                 .pose=pose, .scale=scale, .topic="/dynamic_viz"};
+            rvizPoint = std::make_unique<RvizPoint>(n, opts);
+            rvizPoint->addTransformPair("base_link", "laser_model");
         }
 
 
@@ -135,30 +137,21 @@ class WallFollowing
             auto a = msg.ranges[aIdx];
             auto b = msg.ranges[bIdx];
 
-            // Display extracted points on rviz
-            try
-            {
-                baseLinkTf = tBuffer.lookupTransform("base_link", "laser_model", ros::Time(0));
-            }
-            catch (tf2::TransformException &ex)
-            {
-                ROS_WARN("%s", ex.what());
-            }
-
-            //
-            // (TODO) This needs cleaned up especially since the point object is in the scope of the class
-            //
-
-            geometry_msgs::Point p;
-            point.header.stamp = ros::Time::now();
+            geometry_msgs::Point point_a, point_b;
 
             auto a_angle = aIdx*msg.angle_increment + msg.angle_min;
-            p.x = baseLinkTf.transform.translation.x + msg.ranges[aIdx]*std::cos(a_angle);
-            p.y = baseLinkTf.transform.translation.y + msg.ranges[aIdx]*std::sin(a_angle);
-            p.z = 0.0;
-            point.points.clear();
-            point.points.push_back(p);
-            markerPub.publish(point);
+            auto b_angle = bIdx*msg.angle_increment + msg.angle_min;
+
+            point_a.x = msg.ranges[aIdx]*std::cos(a_angle);
+            point_a.y = msg.ranges[aIdx]*std::sin(a_angle);
+
+            point_b.x = msg.ranges[bIdx]*std::cos(b_angle);
+            point_b.y = msg.ranges[bIdx]*std::sin(b_angle);
+
+            point_a.z = point_b.z = 0.0;
+            std::vector<geometry_msgs::Point> points = {point_a, point_b};
+
+            rvizPoint->addTranslation(points);
 
             auto alpha = std::atan((a*std::cos(theta)-b)/(a*std::sin(theta)));
             auto dist_1 = (b*std::cos(alpha)) + (drive.drive.speed*dt)*std::sin(alpha);
@@ -178,7 +171,7 @@ class WallFollowing
             d = (err-prevErr)/dt;
 
             const auto steer_angle = -(gains.kp*p + gains.ki*i + gains.kd*d);
-            const auto steer_ang_deg = steer_angle*(180.0/pi);
+            const auto steer_ang_deg = steer_angle*(180.0/M_PI);
             const auto abs_steer_ang_deg = std::abs(steer_ang_deg);
 
             //
