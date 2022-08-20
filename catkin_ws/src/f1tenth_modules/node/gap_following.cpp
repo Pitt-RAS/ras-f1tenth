@@ -80,8 +80,8 @@ class GapFollowing
         //These points will be green.
         maxSequencePoints = std::make_unique<RvizPoint>(n, opts);
 
-        bubblePoints->addTransformPair("base_link", "laser_model");
-        maxSequencePoints->addTransformPair("base_link", "laser_model");
+        bubblePoints->addTransformPair("map", "laser");
+        maxSequencePoints->addTransformPair("map", "laser");
     }
 
     void mux_cb(const std_msgs::Int32MultiArray &msg)
@@ -112,10 +112,17 @@ class GapFollowing
         closestPoint =
             {min_point.second, min_point.first*msg.angle_increment+msg.angle_min, static_cast<size_t>(min_point.first)};
 
+        ROS_INFO("");
+        ROS_INFO("\tClosest point angle : %f", closestPoint.angle);
+
         // calculate start and end range of the bubble within the scan
         auto theta = std::acos(rb/closestPoint.dist);
-        auto bubble_start_idx = getScanIdx(closestPoint.angle + theta, lidarData);
-        auto bubble_end_idx = getScanIdx(closestPoint.angle - theta, lidarData);
+        auto bubble_start_idx = getScanIdx(closestPoint.angle - theta, lidarData);
+        auto bubble_end_idx = getScanIdx(closestPoint.angle + theta, lidarData);
+
+        ROS_INFO("\tBubble start index angle : %f", bubble_start_idx*msg.angle_increment + msg.angle_min);
+        ROS_INFO("\tBubble end index angle : %f", bubble_end_idx*msg.angle_increment + msg.angle_min);
+        // ROS_INFO("");
 
         std::vector<size_t> zeros_indices{0};
         // Holds the start and the end of a sequence of numbers
@@ -188,10 +195,15 @@ class GapFollowing
         // last indexed zero to the end of the scan
         if(scanEndIdx-scanStartIdx-zeros_indices.back() > max_sequence)
         {
-            max_sequence_indices.first = zeros_indices.back(); //should this be back + 1?
+            max_sequence_indices.first = zeros_indices.back();
             max_sequence_indices.second = scanEndIdx;
             max_sequence = scanEndIdx-scanStartIdx-zeros_indices.back();
         }
+
+        // ROS_INFO("");
+        ROS_INFO("\tmax sequence start angle: %f", max_sequence_indices.first*msg.angle_increment + msg.angle_min);
+        ROS_INFO("\tmax sequence end angle: %f", max_sequence_indices.second*msg.angle_increment + msg.angle_min);
+        ROS_INFO("");
 
         // Find the largest point away from us within the max sequence
         auto max_point = std::make_pair(-1, msg.range_min);
