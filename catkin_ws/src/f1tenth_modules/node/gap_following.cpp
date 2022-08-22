@@ -40,6 +40,7 @@ class GapFollowing
         std::unique_ptr<RvizPoint> maxSequencePoints;
         std::unique_ptr<RvizPoint> cp;
 
+
     public:
 
     GapFollowing():
@@ -165,6 +166,8 @@ class GapFollowing
         pointScan point_scan;
         double r = rb;
         double max_sequence{0.0};
+
+        std::vector<geometry_msgs::Point> bubble_point_vector;
 
         // Check all points in the scan range of the bubble
         for (size_t i = bubble_start_idx; i <= bubble_end_idx; i++)
