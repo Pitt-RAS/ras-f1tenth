@@ -96,9 +96,9 @@ class GapFollowing
         opts.color=0x0000ff;
         cp = std::make_unique<RvizPoint>(n, opts);
 
-        bubblePoints->addTransformPair("map", "laser");
-        maxSequencePoints->addTransformPair("map", "laser");
-        cp->addTransformPair("map", "laser");
+        bubblePoints->addTransformPair("base_link", "laser");
+        maxSequencePoints->addTransformPair("base_link", "laser");
+        cp->addTransformPair("base_link", "laser");
     }
 
     void mux_cb(const std_msgs::Int32MultiArray &msg)
@@ -157,14 +157,14 @@ class GapFollowing
         // ROS_INFO("");
 
         std::vector<size_t> zeros_indices{0};
+        std::vector<geometry_msgs::Point> bubble_point_vector;
+
         // Holds the start and the end of a sequence of numbers
         std::pair<size_t, size_t> max_sequence_indices;
         geometry_msgs::Point point;
         pointScan point_scan;
         double r = rb;
         double max_sequence{0.0};
-
-        std::vector<geometry_msgs::Point> bubble_point_vector;
 
         // Check all points in the scan range of the bubble
         for (size_t i = bubble_start_idx; i <= bubble_end_idx; i++)
@@ -190,15 +190,18 @@ class GapFollowing
             // rectangular coordinates
             if (r < rb)
             {
-                point.x = msg.ranges[i]*std::cos(msg.range_min + i*msg.angle_increment);
-                point.y = msg.ranges[i]*std::sin(msg.range_min + i*msg.angle_increment);
-                point.z = 0;
+                point.x = msg.ranges[i]*std::cos(point_scan.angle);
+                point.y = msg.ranges[i]*std::sin(point_scan.angle);
+                point.z = 0.00;
+
+                // ROS_INFO("pushing point at dist %f angle %f", msg.ranges[i], point_scan.angle);
 
                 zeros_indices.push_back(i);
                 bubble_point_vector.push_back(point);
             }
         }
 
+        // These points are fine now
         bubblePoints->addTranslation(bubble_point_vector);
 
         //
