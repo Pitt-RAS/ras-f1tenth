@@ -38,6 +38,7 @@ class GapFollowing
 
         std::unique_ptr<RvizPoint> bubblePoints;
         std::unique_ptr<RvizPoint> maxSequencePoints;
+        std::unique_ptr<RvizPoint> cp;
 
     public:
 
@@ -77,7 +78,7 @@ class GapFollowing
 
         rvizOpts opts = {
                             .color=0xff0000,
-                            .frame_id="laser_model",
+                            .frame_id="laser",
                             .ns="point",
                             .pose=pose,
                             .scale=scale,
@@ -86,12 +87,18 @@ class GapFollowing
 
         // These points will be red.
         bubblePoints = std::make_unique<RvizPoint>(n, opts);
+
+        // These points will be green.
         opts.color=0x00ff00;
-        //These points will be green.
         maxSequencePoints = std::make_unique<RvizPoint>(n, opts);
+
+        // These points will be blue
+        opts.color=0x0000ff;
+        cp = std::make_unique<RvizPoint>(n, opts);
 
         bubblePoints->addTransformPair("map", "laser");
         maxSequencePoints->addTransformPair("map", "laser");
+        cp->addTransformPair("map", "laser");
     }
 
     void mux_cb(const std_msgs::Int32MultiArray &msg)
@@ -116,8 +123,17 @@ class GapFollowing
         if (min_point.first < 0)
             return;
 
-        closestPoint =
-            {min_point.second, min_point.first*msg.angle_increment+msg.angle_min, static_cast<size_t>(min_point.first)};
+        closestPoint = {
+                .dist = min_point.second,
+                .angle = min_point.first*msg.angle_increment+msg.angle_min,
+            };
+
+        closestPoint.p.x = closestPoint.dist*std::cos(closestPoint.angle);
+        closestPoint.p.y = closestPoint.dist*std::sin(closestPoint.angle);
+        closestPoint.p.z = 0.0;
+
+        // This point is fine
+        cp->addTranslation(closestPoint.p);
 
         ROS_INFO("");
         ROS_INFO("\tClosest point angle : %f", closestPoint.angle);
@@ -136,8 +152,8 @@ class GapFollowing
         auto bubble_start_idx = getScanIdx(closestPoint.angle - theta, lidarData);
         auto bubble_end_idx = getScanIdx(closestPoint.angle + theta, lidarData);
         ROS_INFO("\ttheta : %f", theta);
-        ROS_INFO("\tBubble start index angle : %f", bubble_start_idx*msg.angle_increment + msg.angle_min);
-        ROS_INFO("\tBubble end index angle : %f", bubble_end_idx*msg.angle_increment + msg.angle_min);
+        ROS_INFO("\tBubble start index %d at angle %f", bubble_start_idx,bubble_start_idx*msg.angle_increment + msg.angle_min);
+        ROS_INFO("\tBubble end index %d angle %f", bubble_end_idx,bubble_end_idx*msg.angle_increment + msg.angle_min);
         // ROS_INFO("");
 
         std::vector<size_t> zeros_indices{0};
@@ -158,7 +174,6 @@ class GapFollowing
 
             point_scan.angle = i*msg.angle_increment + msg.angle_min;
             point_scan.dist = msg.ranges[i];
-            point_scan.idx = i; //may be unecessary
 
             r = std::sqrt(
                 std::pow(point_scan.dist,2)
