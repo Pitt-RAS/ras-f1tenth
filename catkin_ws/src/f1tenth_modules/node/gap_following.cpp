@@ -37,9 +37,8 @@ class GapFollowing
         double rb;
         bool enabled;
 
-        std::unique_ptr<RvizPoint> bubblePoints;
-        std::unique_ptr<RvizPoint> maxSequencePoints;
-        std::unique_ptr<RvizPoint> fp;
+        std::unique_ptr<RvizPoint> bubble;
+        std::unique_ptr<RvizPoint> cp, fp;
 
     public:
 
@@ -86,20 +85,17 @@ class GapFollowing
                             .topic="/dynamic_viz"
                         };
 
-        // These points will be red.
-        bubblePoints = std::make_unique<RvizPoint>(n, opts);
-
-        // These points will be green.
-        opts.color=0x00ff00;
-        maxSequencePoints = std::make_unique<RvizPoint>(n, opts);
-
         // These points will be blue
-        opts.color=0x0000ff;
+        opts.color=0x00ff00;
         fp = std::make_unique<RvizPoint>(n, opts);
+        cp = std::make_unique<RvizPoint>(n, opts);
 
-        bubblePoints->addTransformPair("base_link", "laser");
-        maxSequencePoints->addTransformPair("base_link", "laser");
+        opts.color=0xff0000;
+        bubble = std::make_unique<RvizPoint>(n, opts);
+
+        cp->addTransformPair("base_link", "laser");
         fp->addTransformPair("base_link", "laser");
+        bubble->addTransformPair("base_link", "laser");
     }
 
     void mux_cb(const std_msgs::Int32MultiArray &msg)
@@ -111,9 +107,11 @@ class GapFollowing
     {
         std::vector<geometry_msgs::Point> bubble_point_vector;
         std::pair<size_t, size_t> max_sequence_indices;
-        geometry_msgs::Point point;
         pointScan point_scan;
         std::vector<size_t> zeros_indices;
+        geometry_msgs::Point point;
+
+        point.z = 0.0;
 
         double r = rb;
         double max_sequence{0.0};
@@ -141,6 +139,8 @@ class GapFollowing
         closestPoint.p.y = closestPoint.dist*std::sin(closestPoint.angle);
         closestPoint.p.z = 0.0;
 
+        cp->addTranslation(closestPoint.p);
+
         // calculate start and end range of the bubble within the scan
         if (closestPoint.dist < rb)
         {
@@ -160,8 +160,8 @@ class GapFollowing
             if (i < scanStartIdx || i > scanEndIdx)
                 continue;
 
-            // point_scan.angle = i*msg.angle_increment + msg.angle_min;
-            // point_scan.dist = msg.ranges[i];
+            point_scan.angle = i*msg.angle_increment + msg.angle_min;
+            point_scan.dist = msg.ranges[i];
 
             // r = std::sqrt(
             //     std::pow(point_scan.dist,2)
@@ -187,11 +187,14 @@ class GapFollowing
             //     zeros_indices.push_back(i);
             //     bubble_point_vector.push_back(point);
             // }
+            point.x = point_scan.dist*std::cos(point_scan.angle);
+            point.y = point_scan.dist*std::sin(point_scan.angle);
+            bubble_point_vector.push_back(point);
             zeros_indices.push_back(i);
         }
 
         // These points are fine now
-        bubblePoints->addTranslation(bubble_point_vector);
+        bubble->addTranslation(bubble_point_vector);
 
         //
         // Checking for the largest non-zero sequence
