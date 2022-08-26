@@ -265,7 +265,7 @@ class GapFollowing
         drive.header.frame_id = "drive_gap_following";
         drive.drive.steering_angle = max_point.first*msg.angle_increment + msg.angle_min;
         drive.drive.steering_angle_velocity = 0.0;
-        drive.drive.speed = 2.0;
+        drive.drive.speed = 1.5;
 
         if (enabled)
         {
