@@ -37,5 +37,26 @@ public:
     RvizPoint(ros::NodeHandle &, const rvizOpts &);
 };
 
+class RvizLine : public RvizWrapper
+{
+private:
+
+public:
+    RvizLine() = delete;
+    RvizLine(ros::NodeHandle &, const rvizOpts &);
+    void addTranslation(const geometry_msgs::Point &);
+};
+
+class RvizLineList : public RvizWrapper
+{
+private:
+
+public:
+    RvizLineList() = delete;
+    RvizLineList(ros::NodeHandle &, const rvizOpts &);
+    void addTranslation(const std::vector<geometry_msgs::Point> &);
+    void changeScale(const geometry_msgs::Vector3 &);
+
+};
 
 #endif

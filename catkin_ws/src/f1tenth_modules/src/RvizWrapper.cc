@@ -2,7 +2,6 @@
 
 /////////////////////////////////////////////////////////////////////
 // RvizPoint
-int32_t RvizWrapper::id = 0;
 
 RvizPoint::RvizPoint(ros::NodeHandle &n, const rvizOpts &opts)
 {
@@ -20,7 +19,108 @@ RvizPoint::RvizPoint(ros::NodeHandle &n, const rvizOpts &opts)
 }
 
 /////////////////////////////////////////////////////////////////////
+// RvizLine
+
+RvizLine::RvizLine(ros::NodeHandle &n, const rvizOpts &opts)
+{
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.type = visualization_msgs::Marker::LINE_STRIP;
+
+    marker.header.frame_id = opts.frame_id;
+    marker.ns = opts.ns;
+    marker.pose = opts.pose;
+    marker.scale = opts.scale;
+    marker.id = id++;
+
+    markerPub = n.advertise<visualization_msgs::Marker>(opts.topic, 10);
+    changeColor(opts.color);
+}
+
+void RvizLine::addTranslation(const geometry_msgs::Point &v)
+{
+    geometry_msgs::Point origin, p;
+
+    try
+    {
+        auto tf = tfBuffer->lookupTransform(transformPair.first, transformPair.second, ros::Time(0));
+        origin.x = tf.transform.translation.x;
+        origin.y = tf.transform.translation.y;
+        origin.z = tf.transform.translation.z;
+    } catch (tf2::TransformException &ex)
+    {
+        ROS_WARN("%s", ex.what());
+        return;
+    }
+
+    p.x = origin.x + v.x;
+    p.y = origin.y + v.y;
+    p.z = origin.z + v.z;
+
+    marker.points.clear();
+
+    marker.points.push_back(origin);
+    marker.points.push_back(p);
+
+    markerPub.publish(marker);
+}
+
+/////////////////////////////////////////////////////////////////////
+// RvizLineList
+RvizLineList::RvizLineList(ros::NodeHandle &n, const rvizOpts &opts)
+{
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.type = visualization_msgs::Marker::LINE_LIST;
+
+    marker.header.frame_id = opts.frame_id;
+    marker.ns = opts.ns;
+    marker.pose = opts.pose;
+    marker.scale = opts.scale;
+    marker.id = id++;
+
+    markerPub = n.advertise<visualization_msgs::Marker>(opts.topic, 10);
+    changeColor(opts.color);
+}
+
+void RvizLineList::addTranslation(const std::vector<geometry_msgs::Point> &v)
+{
+    geometry_msgs::Point origin, p;
+    marker.points.clear();
+
+    try
+    {
+        auto tf = tfBuffer->lookupTransform(transformPair.first, transformPair.second, ros::Time(0));
+
+        origin.x = tf.transform.translation.x;
+        origin.y = tf.transform.translation.y;
+        origin.z = tf.transform.translation.z;
+
+        for (const auto &el : v)
+        {
+            p.x = origin.x + el.x;
+            p.y = origin.y + el.y;
+            p.z = origin.z + el.z;
+
+            marker.points.push_back(origin);
+            marker.points.push_back(p);
+        }
+    } catch (tf2::TransformException &ex)
+    {
+        ROS_WARN("%s", ex.what());
+        return;
+    }
+
+    marker.header.stamp = ros::Time::now();
+    markerPub.publish(marker);
+}
+
+ void RvizLineList::changeScale(const geometry_msgs::Vector3 &v)
+ {
+    marker.scale.x = v.x;
+ }
+
+/////////////////////////////////////////////////////////////////////
 // RvizWrapper
+int32_t RvizWrapper::id = 0;
 
 RvizWrapper::RvizWrapper():
     tfBuffer(nullptr), tfListener(nullptr)
@@ -43,11 +143,11 @@ void RvizWrapper::changeColor(uint32_t color)
 
 void RvizWrapper::addTransformPair(const std::string &a, const std::string &b)
 {
-    if (tfBuffer == nullptr && tfListener == nullptr)
-    {
+    if (tfBuffer == nullptr)
         tfBuffer = std::make_unique<tf2_ros::Buffer>();
+
+    if (tfListener == nullptr)
         tfListener = std::make_unique<tf2_ros::TransformListener>(*tfBuffer);
-    }
 
     transformPair.first = a;
     transformPair.second = b;
@@ -101,7 +201,6 @@ void RvizWrapper::addTranslation(const std::vector<geometry_msgs::Point> &v)
 
             marker.points.push_back(point);
         }
-
     } catch (tf2::TransformException &ex)
     {
         ROS_WARN("%s", ex.what());
