@@ -41,6 +41,7 @@ class GapFollowing
         std::unique_ptr<RvizPoint> bubble;
         std::unique_ptr<RvizPoint> cp;
         std::unique_ptr<RvizLine> fp;
+        std::unique_ptr<RvizLine> bufferPoints;
 
     public:
 
@@ -93,6 +94,7 @@ class GapFollowing
         opts.color=0x00ff00;
         fp = std::make_unique<RvizLine>(n, opts);
         cp = std::make_unique<RvizPoint>(n, opts);
+        bufferPoints = std::make_unique<RvizLine>(n, opts);
 
         opts.color=0xff0000;
         bubble = std::make_unique<RvizPoint>(n, opts);
@@ -100,6 +102,7 @@ class GapFollowing
         cp->addTransformPair("base_link", "laser");
         fp->addTransformPair("base_link", "laser");
         bubble->addTransformPair("base_link", "laser");
+        bufferPoints->addTransformPair("base_link", "laser");
     }
 
     void mux_cb(const std_msgs::Int32MultiArray &msg)
@@ -238,7 +241,7 @@ class GapFollowing
             max_sequence_indices.second = scanEndIdx;
             max_sequence = scanEndIdx-scanStartIdx-zeros_indices.back();
         }
-
+        // ROS_INFO("Max sequence between %d and %d", max_sequence_indices.first, max_sequence_indices.second);
         // Virtualize the points based on disparity
         std::vector<float> max_sequence_vector;
 
@@ -249,16 +252,16 @@ class GapFollowing
             max_sequence_vector.push_back(scan_cp[i]);
         }
 
-        auto filtered_points = find_disparities(max_sequence_vector, max_sequence_indices.first);
+        find_disparities(max_sequence_vector, max_sequence_indices.first);
 
         // Find the largest point away from us within the max sequence
         auto max_point = std::make_pair(-1, msg.range_min);
-        for (size_t i = 0; i < filtered_points.size(); i++)
+        for (size_t i = 0; i < max_sequence_vector.size(); i++)
         {
-            if (filtered_points[i] >= max_point.second)
+            if (max_sequence_vector[i] >= max_point.second)
             {
                 max_point.first = max_sequence_indices.first + i;
-                max_point.second = filtered_points[i];
+                max_point.second = max_sequence_vector[i];
             }
         }
 
@@ -287,18 +290,28 @@ class GapFollowing
             drivePub.publish(drive);
     }
 
-    std::vector<float> find_disparities(std::vector<float> points, float offset)
+    void find_disparities(std::vector<float> &points, size_t offset)
     {
+        geometry_msgs::Point p;
+        p.z = 0.0;
+
         for (size_t i = 1; i <= points.size(); i++)
         {
             // find disparity
             auto min_point = std::min(points[i], points[i-1]);
             auto disparity = points[i] - points[i-1];
+            std::cout << points[i] << std::endl;
+            // std::cout << disparity << std::endl;
 
-            if (std::abs(disparity) >= dispThreshold)
+            if (std::fabs(disparity) >= dispThreshold)
             {
-                // ROS_INFO("Found disparity");
-                // find direction of the disparity
+                // ROS_INFO("Found disparity at angle : %f", (i+offset)*lidarData.scan_inc + lidarData.min_angle);
+                // p.x = points[i]*std::cos((i + offset)*lidarData.scan_inc + lidarData.min_angle);
+                // p.y = points[i]*std::sin((i + offset)*lidarData.scan_inc + lidarData.min_angle);
+                // std::cout << points[i] << std::endl;
+                // bufferPoints->addTranslation(p);
+
+                // find direction of the disparitys
                 if (disparity < 0) //clockwise
                 {
                     // ROS_INFO("Clockwise disparity");
@@ -332,7 +345,6 @@ class GapFollowing
                 }
             }
         }
-        return points;
     }
 };
 
