@@ -41,7 +41,7 @@ class GapFollowing
         std::unique_ptr<RvizPoint> bubble;
         std::unique_ptr<RvizPoint> cp;
         std::unique_ptr<RvizLine> fp;
-        std::unique_ptr<RvizLine> bufferPoints;
+        std::unique_ptr<RvizLineList> bufferPoints;
 
     public:
 
@@ -94,7 +94,7 @@ class GapFollowing
         opts.color=0x00ff00;
         fp = std::make_unique<RvizLine>(n, opts);
         cp = std::make_unique<RvizPoint>(n, opts);
-        bufferPoints = std::make_unique<RvizLine>(n, opts);
+        bufferPoints = std::make_unique<RvizLineList>(n, opts);
 
         opts.color=0xff0000;
         bubble = std::make_unique<RvizPoint>(n, opts);
@@ -116,7 +116,10 @@ class GapFollowing
         std::pair<size_t, size_t> max_sequence_indices;
         std::vector<size_t> zeros_indices;
 
-        auto scan_cp = msg.ranges;
+        std::vector<float> scan_cp;
+        scan_cp.reserve(msg.ranges.size());
+
+        scan_cp = msg.ranges;
 
         pointScan point_scan;
         geometry_msgs::Point point;
@@ -145,12 +148,11 @@ class GapFollowing
                 .angle = min_point.first*msg.angle_increment+msg.angle_min,
             };
 
-        closestPoint.p.x = closestPoint.dist*std::cos(closestPoint.angle);
-        closestPoint.p.y = closestPoint.dist*std::sin(closestPoint.angle);
-        closestPoint.p.z = 0.0;
-
         // Rviz
-        cp->addTranslation(closestPoint.p);
+        // closestPoint.p.x = closestPoint.dist*std::cos(closestPoint.angle);
+        // closestPoint.p.y = closestPoint.dist*std::sin(closestPoint.angle);
+        // closestPoint.p.z = 0.0;
+        // cp->addTranslation(closestPoint.p);
 
         // calculate start and end range of the bubble within the scan
         if (closestPoint.dist < rb)
@@ -201,7 +203,7 @@ class GapFollowing
         }
 
         // Rviz
-        bubble->addTranslation(bubble_point_vector);
+        // bubble->addTranslation(bubble_point_vector);
 
         //
         // Checking for the largest non-zero sequence
@@ -244,6 +246,7 @@ class GapFollowing
         // ROS_INFO("Max sequence between %d and %d", max_sequence_indices.first, max_sequence_indices.second);
         // Virtualize the points based on disparity
         std::vector<float> max_sequence_vector;
+        max_sequence_vector.reserve(max_sequence_indices.second - max_sequence_indices.first + 1);
 
         // Make a subvector of points that correspond to the max
         // sequence on non-zero points.
@@ -252,7 +255,61 @@ class GapFollowing
             max_sequence_vector.push_back(scan_cp[i]);
         }
 
-        find_disparities(max_sequence_vector, max_sequence_indices.first);
+        // find_disparities(max_sequence_vector, max_sequence_indices.first);
+        // DISPARITIES
+        geometry_msgs::Point p;
+        p.z = 0.0;
+        std::vector<geometry_msgs::Point> bp;
+        
+        for (size_t i = 1; i < max_sequence_vector.size(); i++)
+        {
+            auto min_point = std::min(max_sequence_vector[i], max_sequence_vector[i-1]);
+            auto disparity = max_sequence_vector[i] - max_sequence_vector[i-1];
+
+            if (std::fabs(disparity) >= dispThreshold)
+            {
+                // std::cout << max_sequence_vector[i] << std::endl;
+                p.x = max_sequence_vector[i]*std::cos((i + max_sequence_indices.first)*lidarData.scan_inc + lidarData.min_angle);
+                p.y = max_sequence_vector[i]*std::sin((i + max_sequence_indices.first)*lidarData.scan_inc + lidarData.min_angle);
+                // bufferPoints->addTranslation(p);
+
+                if (disparity < 0)
+                {
+                    // ROS_INFO("clockwise disparity");
+                    auto end_idx = (int)round((i*lidarData.scan_inc + dispBufferAngle)/lidarData.scan_inc);
+
+                    if (end_idx >= max_sequence_vector.size())
+                        end_idx = max_sequence_vector.size()-1;
+                    // ROS_INFO("BOUNDS: %d %d", i, end_idx);
+                    for (size_t j = i; j <= end_idx; j++)
+                    {
+                        // p.x = max_sequence
+                        max_sequence_vector[j] = min_point;
+                        p.x = max_sequence_vector[i]*std::cos((j + max_sequence_indices.first)*lidarData.scan_inc + lidarData.min_angle);
+                        p.y = max_sequence_vector[i]*std::sin((j + max_sequence_indices.first)*lidarData.scan_inc + lidarData.min_angle);
+                        bp.push_back(p);
+                    }
+                    i = end_idx+1;
+                }
+
+                if (disparity > 0)
+                {
+
+                    auto end_idx = (int)round((i*lidarData.scan_inc - dispBufferAngle)/lidarData.scan_inc);
+
+                    if (end_idx < 0)
+                        end_idx = 0;
+
+                    for (size_t j = i; j >= end_idx; j--)
+                    {
+                        max_sequence_vector[j] = min_point;
+                    }
+                }
+            }
+        }
+        bufferPoints->addTranslation(bp);
+
+        //////////////
 
         // Find the largest point away from us within the max sequence
         auto max_point = std::make_pair(-1, msg.range_min);
@@ -274,9 +331,9 @@ class GapFollowing
         };
 
         // Rviz
-        furthestPoint.p.x = furthestPoint.dist*std::cos(furthestPoint.angle);
-        furthestPoint.p.y = furthestPoint.dist*std::sin(furthestPoint.angle);
-        fp->addTranslation(furthestPoint.p);
+        // furthestPoint.p.x = furthestPoint.dist*std::cos(furthestPoint.angle);
+        // furthestPoint.p.y = furthestPoint.dist*std::sin(furthestPoint.angle);
+        // fp->addTranslation(furthestPoint.p);
 
         // Set the steering angle to the farthest point
         // (TODO) Set this up to be a helper function with custom structs
@@ -290,7 +347,7 @@ class GapFollowing
             drivePub.publish(drive);
     }
 
-    void find_disparities(std::vector<float> &points, size_t offset)
+    void find_disparities(std::vector<float> points, size_t offset)
     {
         geometry_msgs::Point p;
         p.z = 0.0;
@@ -300,18 +357,15 @@ class GapFollowing
             // find disparity
             auto min_point = std::min(points[i], points[i-1]);
             auto disparity = points[i] - points[i-1];
-            std::cout << points[i] << std::endl;
-            // std::cout << disparity << std::endl;
-
+            // std::cout << "test" << std::endl;
             if (std::fabs(disparity) >= dispThreshold)
             {
-                // ROS_INFO("Found disparity at angle : %f", (i+offset)*lidarData.scan_inc + lidarData.min_angle);
+                // ROS_INFO("points : %f", points[i]);
                 // p.x = points[i]*std::cos((i + offset)*lidarData.scan_inc + lidarData.min_angle);
                 // p.y = points[i]*std::sin((i + offset)*lidarData.scan_inc + lidarData.min_angle);
-                // std::cout << points[i] << std::endl;
                 // bufferPoints->addTranslation(p);
 
-                // find direction of the disparitys
+                // find direction of the disparities
                 if (disparity < 0) //clockwise
                 {
                     // ROS_INFO("Clockwise disparity");
@@ -320,7 +374,7 @@ class GapFollowing
                     auto end_idx = (int)round((i*lidarData.scan_inc + dispBufferAngle)/lidarData.scan_inc);
 
                     if (end_idx > points.size())
-                        end_idx = points.size();
+                        end_idx = points.size()-1;
 
                     for (size_t j = i; j <= end_idx; j++)
                     {
