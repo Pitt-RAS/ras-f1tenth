@@ -149,10 +149,10 @@ class GapFollowing
             };
 
         // Rviz
-        // closestPoint.p.x = closestPoint.dist*std::cos(closestPoint.angle);
-        // closestPoint.p.y = closestPoint.dist*std::sin(closestPoint.angle);
-        // closestPoint.p.z = 0.0;
-        // cp->addTranslation(closestPoint.p);
+        closestPoint.p.x = closestPoint.dist*std::cos(closestPoint.angle);
+        closestPoint.p.y = closestPoint.dist*std::sin(closestPoint.angle);
+        closestPoint.p.z = 0.0;
+        cp->addTranslation(closestPoint.p);
 
         // calculate start and end range of the bubble within the scan
         if (closestPoint.dist < rb)
@@ -176,12 +176,12 @@ class GapFollowing
             point_scan.angle = i*msg.angle_increment + msg.angle_min;
             point_scan.dist = scan_cp[i];
 
-            r = std::sqrt(
-                std::pow(point_scan.dist,2)
-                + std::pow(closestPoint.dist,2)
-                - 2*point_scan.dist*closestPoint.dist*std::cos(point_scan.angle - closestPoint.angle)
-                );
-
+            // r = std::sqrt(
+            //     std::pow(point_scan.dist,2)
+            //     + std::pow(closestPoint.dist,2)
+            //     - 2*point_scan.dist*closestPoint.dist*std::cos(point_scan.angle - closestPoint.angle)
+            //     );
+            zeros_indices.push_back(i);
             //
             // TODO(nmm): Add some sort of configuration to turn
             //  the rviz functionality on and off
@@ -189,21 +189,18 @@ class GapFollowing
 
             // Store the index of the 'zero' and add the points
             // rectangular coordinates
-            if (r < rb)
-            {
-                point.x = scan_cp[i]*std::cos(point_scan.angle);
-                point.y = scan_cp[i]*std::sin(point_scan.angle);
-                point.z = 0.00;
+            // if (r < rb)
+            // {
+            //     point.x = scan_cp[i]*std::cos(point_scan.angle);
+            //     point.y = scan_cp[i]*std::sin(point_scan.angle);
+            //     point.z = 0.00;
 
-                // ROS_INFO("pushing point at dist %f angle %f", scan_cp[i], point_scan.angle);
+            //     // ROS_INFO("pushing point at dist %f angle %f", scan_cp[i], point_scan.angle);
 
-                zeros_indices.push_back(i);
-                bubble_point_vector.push_back(point);
-            }
+            //     zeros_indices.push_back(i);
+            //     bubble_point_vector.push_back(point);
+            // }
         }
-
-        // Rviz
-        // bubble->addTranslation(bubble_point_vector);
 
         //
         // Checking for the largest non-zero sequence
@@ -255,12 +252,11 @@ class GapFollowing
             max_sequence_vector.push_back(scan_cp[i]);
         }
 
-        // find_disparities(max_sequence_vector, max_sequence_indices.first);
         // DISPARITIES
         geometry_msgs::Point p;
         p.z = 0.0;
         std::vector<geometry_msgs::Point> bp;
-        
+
         for (size_t i = 1; i < max_sequence_vector.size(); i++)
         {
             auto min_point = std::min(max_sequence_vector[i], max_sequence_vector[i-1]);
@@ -268,59 +264,60 @@ class GapFollowing
 
             if (std::fabs(disparity) >= dispThreshold)
             {
-                // std::cout << max_sequence_vector[i] << std::endl;
-                p.x = max_sequence_vector[i]*std::cos((i + max_sequence_indices.first)*lidarData.scan_inc + lidarData.min_angle);
-                p.y = max_sequence_vector[i]*std::sin((i + max_sequence_indices.first)*lidarData.scan_inc + lidarData.min_angle);
-                // bufferPoints->addTranslation(p);
-
                 if (disparity < 0)
                 {
                     // ROS_INFO("clockwise disparity");
-                    auto end_idx = (int)round((i*lidarData.scan_inc + dispBufferAngle)/lidarData.scan_inc);
-
-                    if (end_idx >= max_sequence_vector.size())
-                        end_idx = max_sequence_vector.size()-1;
-                    // ROS_INFO("BOUNDS: %d %d", i, end_idx);
-                    for (size_t j = i; j <= end_idx; j++)
-                    {
-                        // p.x = max_sequence
-                        max_sequence_vector[j] = min_point;
-                        p.x = max_sequence_vector[i]*std::cos((j + max_sequence_indices.first)*lidarData.scan_inc + lidarData.min_angle);
-                        p.y = max_sequence_vector[i]*std::sin((j + max_sequence_indices.first)*lidarData.scan_inc + lidarData.min_angle);
-                        bp.push_back(p);
-                    }
-                    i = end_idx+1;
-                }
-
-                if (disparity > 0)
-                {
-
                     auto end_idx = (int)round((i*lidarData.scan_inc - dispBufferAngle)/lidarData.scan_inc);
 
                     if (end_idx < 0)
                         end_idx = 0;
-
+                    ROS_INFO("Disparity between %d and %d", i, end_idx);
                     for (size_t j = i; j >= end_idx; j--)
                     {
                         max_sequence_vector[j] = min_point;
+                        //Rviz
+                        p.x = max_sequence_vector[j]*std::cos((j + max_sequence_indices.first)*lidarData.scan_inc + lidarData.min_angle);
+                        p.y = max_sequence_vector[j]*std::sin((j + max_sequence_indices.first)*lidarData.scan_inc + lidarData.min_angle);
+                        bp.push_back(p);
                     }
+                }
+
+                if (disparity > 0)
+                {
+                    ROS_INFO("counter-clockwise disparity");
+                    auto end_idx = (int)round((i*lidarData.scan_inc + dispBufferAngle)/lidarData.scan_inc);
+
+                    if (end_idx >= max_sequence_vector.size())
+                        end_idx = max_sequence_vector.size()-1;
+
+                    for (size_t j = i; j <= end_idx; j++)
+                    {
+                        max_sequence_vector[j] = min_point;
+                        //Rviz
+                        p.x = max_sequence_vector[j]*std::cos((j + max_sequence_indices.first)*lidarData.scan_inc + lidarData.min_angle);
+                        p.y = max_sequence_vector[j]*std::sin((j + max_sequence_indices.first)*lidarData.scan_inc + lidarData.min_angle);
+                        bp.push_back(p);
+                    }
+                    i = end_idx + 1;
                 }
             }
         }
         bufferPoints->addTranslation(bp);
-
         //////////////
 
         // Find the largest point away from us within the max sequence
         auto max_point = std::make_pair(-1, msg.range_min);
         for (size_t i = 0; i < max_sequence_vector.size(); i++)
         {
+            // std::cout << 
             if (max_sequence_vector[i] >= max_point.second)
             {
                 max_point.first = max_sequence_indices.first + i;
                 max_point.second = max_sequence_vector[i];
             }
         }
+
+        ROS_INFO("Max point found at index : %d", max_point.first - max_sequence_indices.first);
 
         if (max_point.first < 0)
             return;
@@ -331,9 +328,9 @@ class GapFollowing
         };
 
         // Rviz
-        // furthestPoint.p.x = furthestPoint.dist*std::cos(furthestPoint.angle);
-        // furthestPoint.p.y = furthestPoint.dist*std::sin(furthestPoint.angle);
-        // fp->addTranslation(furthestPoint.p);
+        furthestPoint.p.x = furthestPoint.dist*std::cos(furthestPoint.angle);
+        furthestPoint.p.y = furthestPoint.dist*std::sin(furthestPoint.angle);
+        fp->addTranslation(furthestPoint.p);
 
         // Set the steering angle to the farthest point
         // (TODO) Set this up to be a helper function with custom structs
@@ -345,60 +342,6 @@ class GapFollowing
 
         if (enabled)
             drivePub.publish(drive);
-    }
-
-    void find_disparities(std::vector<float> points, size_t offset)
-    {
-        geometry_msgs::Point p;
-        p.z = 0.0;
-
-        for (size_t i = 1; i <= points.size(); i++)
-        {
-            // find disparity
-            auto min_point = std::min(points[i], points[i-1]);
-            auto disparity = points[i] - points[i-1];
-            // std::cout << "test" << std::endl;
-            if (std::fabs(disparity) >= dispThreshold)
-            {
-                // ROS_INFO("points : %f", points[i]);
-                // p.x = points[i]*std::cos((i + offset)*lidarData.scan_inc + lidarData.min_angle);
-                // p.y = points[i]*std::sin((i + offset)*lidarData.scan_inc + lidarData.min_angle);
-                // bufferPoints->addTranslation(p);
-
-                // find direction of the disparities
-                if (disparity < 0) //clockwise
-                {
-                    // ROS_INFO("Clockwise disparity");
-                    // Calculate end index of bufferered points
-                    // auto end_idx = getScanIdx((i*lidarData.scan_inc + lidarData.min_angle) + dispBufferAngle, lidarData);
-                    auto end_idx = (int)round((i*lidarData.scan_inc + dispBufferAngle)/lidarData.scan_inc);
-
-                    if (end_idx > points.size())
-                        end_idx = points.size()-1;
-
-                    for (size_t j = i; j <= end_idx; j++)
-                    {
-                        // set virtual points
-                        points[j] = min_point;
-                    }
-                }
-
-                if (disparity > 0) // counterclockwise
-                {
-                    // ROS_INFO("Counterclockwise disparity");
-                    auto end_idx = (int)round((i*lidarData.scan_inc - dispBufferAngle)/lidarData.scan_inc);
-
-                    if (end_idx < 0)
-                        end_idx = 0;
-
-                    for (size_t j = i; j >= end_idx; j--)
-                    {
-                        // set virtual points
-                        points[j] = min_point;
-                    }
-                }
-            }
-        }
     }
 };
 

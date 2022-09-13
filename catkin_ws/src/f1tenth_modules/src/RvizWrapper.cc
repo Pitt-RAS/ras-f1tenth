@@ -83,6 +83,9 @@ RvizLineList::RvizLineList(ros::NodeHandle &n, const rvizOpts &opts)
 
 void RvizLineList::addTranslation(const std::vector<geometry_msgs::Point> &v)
 {
+    if (v.empty())
+        return;
+
     geometry_msgs::Point origin, p;
     marker.points.clear();
 
