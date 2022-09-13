@@ -173,9 +173,6 @@ class GapFollowing
             if (i < scanStartIdx || i > scanEndIdx)
                 continue;
 
-            // point_scan.angle = i*msg.angle_increment + msg.angle_min;
-            // point_scan.dist = scan_cp[i];
-
             zeros_indices.push_back(i);
         }
 
