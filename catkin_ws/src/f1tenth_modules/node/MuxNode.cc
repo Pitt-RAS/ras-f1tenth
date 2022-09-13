@@ -82,7 +82,7 @@ private:
                 muxIn.shutdown();
                 brake();
                 ROS_WARN("Unkown state change : (%d)", msg.data);
-                currState == "ERR";
+                currState = "ERR";
 
                 break;
         }
@@ -99,7 +99,7 @@ public:
         muxIn = n.subscribe("", 1, &Mux::switch_cb, this);
 
         // Publishers
-        muxOut = n.advertise<ackermann_msgs::AckermannDriveStamped>("/drive", 1);
+        muxOut = n.advertise<ackermann_msgs::AckermannDriveStamped>("/vesc_cmd", 1);
     }
 };
 

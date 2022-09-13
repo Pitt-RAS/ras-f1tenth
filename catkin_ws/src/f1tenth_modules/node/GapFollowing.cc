@@ -247,7 +247,6 @@ class GapFollowing
 
                     for (size_t j = i; j > end_idx; j--)
                     {
-                        // ROS_INFO("j : %d", j);
                         max_sequence_vector[j] = min_point;
                         //Rviz
                         p.x = max_sequence_vector[j]*std::cos((j + max_sequence_indices.first)*lidarData.scan_inc + lidarData.min_angle);

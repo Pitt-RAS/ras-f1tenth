@@ -29,7 +29,7 @@ namespace States {
     namespace Manual
     {
         const std::string NAME = "MANUAL";
-        const std::string DRIVE_TOPIC = "/manual";
+        const std::string DRIVE_TOPIC = "/joy";
         constexpr char INPUT_CHAR = 'm';
     } // namespace Manual
 

@@ -151,6 +151,7 @@ set( src_nodes
   node/GapFollowing.cc
   node/MuxNode.cc
   node/KeyInput.cc
+  node/JoyStick.cc
 )
 
 ## Declare a C++ executable
