@@ -66,8 +66,8 @@ class GapFollowing
         scanSub = n.subscribe("/scan", 1, &GapFollowing::scan_cb, this);
         muxSub = n.subscribe("/mux", 1, &GapFollowing::mux_cb, this);
 
-        scanStartIdx = getScanIdx((-M_PI/2.0), lidarData);
-        scanEndIdx = getScanIdx((M_PI/2.0), lidarData);
+        scanStartIdx = getScanIdx((-M_PI/3.0), lidarData);
+        scanEndIdx = getScanIdx((M_PI/3.0), lidarData);
 
         ROS_INFO("");
         ROS_INFO("Start index of scan : %d", scanStartIdx);
@@ -90,13 +90,13 @@ class GapFollowing
                             .topic="/dynamic_viz"
                         };
 
-        // These points will be blue
+        // These points will be green
         opts.color=0x00ff00;
-        fp = std::make_unique<RvizLine>(n, opts);
         cp = std::make_unique<RvizPoint>(n, opts);
         bufferPoints = std::make_unique<RvizLineList>(n, opts);
 
         opts.color=0xff0000;
+        fp = std::make_unique<RvizLine>(n, opts);
         bubble = std::make_unique<RvizPoint>(n, opts);
 
         cp->addTransformPair("base_link", "laser");
@@ -173,33 +173,10 @@ class GapFollowing
             if (i < scanStartIdx || i > scanEndIdx)
                 continue;
 
-            point_scan.angle = i*msg.angle_increment + msg.angle_min;
-            point_scan.dist = scan_cp[i];
+            // point_scan.angle = i*msg.angle_increment + msg.angle_min;
+            // point_scan.dist = scan_cp[i];
 
-            // r = std::sqrt(
-            //     std::pow(point_scan.dist,2)
-            //     + std::pow(closestPoint.dist,2)
-            //     - 2*point_scan.dist*closestPoint.dist*std::cos(point_scan.angle - closestPoint.angle)
-            //     );
             zeros_indices.push_back(i);
-            //
-            // TODO(nmm): Add some sort of configuration to turn
-            //  the rviz functionality on and off
-            //
-
-            // Store the index of the 'zero' and add the points
-            // rectangular coordinates
-            // if (r < rb)
-            // {
-            //     point.x = scan_cp[i]*std::cos(point_scan.angle);
-            //     point.y = scan_cp[i]*std::sin(point_scan.angle);
-            //     point.z = 0.00;
-
-            //     // ROS_INFO("pushing point at dist %f angle %f", scan_cp[i], point_scan.angle);
-
-            //     zeros_indices.push_back(i);
-            //     bubble_point_vector.push_back(point);
-            // }
         }
 
         //
@@ -240,7 +217,7 @@ class GapFollowing
             max_sequence_indices.second = scanEndIdx;
             max_sequence = scanEndIdx-scanStartIdx-zeros_indices.back();
         }
-        // ROS_INFO("Max sequence between %d and %d", max_sequence_indices.first, max_sequence_indices.second);
+
         // Virtualize the points based on disparity
         std::vector<float> max_sequence_vector;
         max_sequence_vector.reserve(max_sequence_indices.second - max_sequence_indices.first + 1);
@@ -266,14 +243,14 @@ class GapFollowing
             {
                 if (disparity < 0)
                 {
-                    // ROS_INFO("clockwise disparity");
                     auto end_idx = (int)round((i*lidarData.scan_inc - dispBufferAngle)/lidarData.scan_inc);
 
                     if (end_idx < 0)
                         end_idx = 0;
-                    ROS_INFO("Disparity between %d and %d", i, end_idx);
-                    for (size_t j = i; j >= end_idx; j--)
+
+                    for (size_t j = i; j > end_idx; j--)
                     {
+                        // ROS_INFO("j : %d", j);
                         max_sequence_vector[j] = min_point;
                         //Rviz
                         p.x = max_sequence_vector[j]*std::cos((j + max_sequence_indices.first)*lidarData.scan_inc + lidarData.min_angle);
@@ -284,7 +261,6 @@ class GapFollowing
 
                 if (disparity > 0)
                 {
-                    ROS_INFO("counter-clockwise disparity");
                     auto end_idx = (int)round((i*lidarData.scan_inc + dispBufferAngle)/lidarData.scan_inc);
 
                     if (end_idx >= max_sequence_vector.size())
@@ -302,6 +278,7 @@ class GapFollowing
                 }
             }
         }
+
         bufferPoints->addTranslation(bp);
         //////////////
 
@@ -309,15 +286,15 @@ class GapFollowing
         auto max_point = std::make_pair(-1, msg.range_min);
         for (size_t i = 0; i < max_sequence_vector.size(); i++)
         {
-            // std::cout << 
+            if (max_sequence_vector[i] > msg.range_max || std::isinf(max_sequence_vector[i]))
+                continue;
+
             if (max_sequence_vector[i] >= max_point.second)
             {
                 max_point.first = max_sequence_indices.first + i;
                 max_point.second = max_sequence_vector[i];
             }
         }
-
-        ROS_INFO("Max point found at index : %d", max_point.first - max_sequence_indices.first);
 
         if (max_point.first < 0)
             return;
