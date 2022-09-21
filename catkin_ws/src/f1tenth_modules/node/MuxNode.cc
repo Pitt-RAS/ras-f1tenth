@@ -9,9 +9,11 @@ class Mux
 private:
     // ROS
     ros::NodeHandle n;
+
     ros::Publisher muxOut;
     ros::Subscriber muxIn;
     ros::Subscriber muxController;
+    ros::Subscriber eBrake;
 
     std::string currState;
 
@@ -19,17 +21,6 @@ private:
     void muxIn_cb(const ackermann_msgs::AckermannDriveStamped &msg)
     {
         muxOut.publish(msg);
-    }
-
-    void brake()
-    {
-        ackermann_msgs::AckermannDriveStamped drive;
-        drive.header.stamp = ros::Time::now();
-        drive.header.frame_id = States::Off::NAME;
-
-        drive.drive.speed = 0.0;
-
-        muxOut.publish(drive);
     }
 
     void switch_cb(const std_msgs::UInt8 &msg)
@@ -81,7 +72,7 @@ private:
             default:
                 muxIn.shutdown();
                 brake();
-                ROS_WARN("Unkown state change : (%d)", msg.data);
+                ROS_WARN("Unkown state change : (%c)", static_cast<char>(msg.data));
                 currState = "ERR";
 
                 break;
@@ -96,10 +87,25 @@ public:
 
         // Subcribers
         muxController = n.subscribe("/input", 1, &Mux::switch_cb, this);
-        muxIn = n.subscribe("", 1, &Mux::switch_cb, this);
+        muxIn = n.subscribe("", 1, &Mux::muxIn_cb, this);
 
         // Publishers
         muxOut = n.advertise<ackermann_msgs::AckermannDriveStamped>("/vesc_cmd", 1);
+    }
+
+    void brake()
+    {
+        ackermann_msgs::AckermannDriveStamped drive;
+        drive.header.stamp = ros::Time::now();
+        drive.header.frame_id = States::Off::NAME;
+
+        drive.drive.speed = 0.0;
+        
+        auto i = 0;
+        while (i++<50)
+        {
+            muxOut.publish(drive);
+        }
     }
 };
 

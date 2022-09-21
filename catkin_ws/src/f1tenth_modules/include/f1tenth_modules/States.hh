@@ -16,6 +16,7 @@ namespace States {
         MANUAL,
         WALLFOLLOWING,
         GAPFOLLOWING,
+        SAFETYBRAKE,
 
         _SIZE_
     };
@@ -46,6 +47,13 @@ namespace States {
         const std::string DRIVE_TOPIC = "/gap_following";
         constexpr char INPUT_CHAR = 'g';
     } // namespace GapFollowing
+
+    namespace SafetyBrake
+    {
+        const std::string NAME = "SAFETY-BRAKE";
+        const std::string DRIVE_TOPIC = "/brake";
+        constexpr char INPUT_CHAR = 0x01;
+    } // namespace SafetyBrake
 
 } // namespace States
 
