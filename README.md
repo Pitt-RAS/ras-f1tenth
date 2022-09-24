@@ -22,11 +22,15 @@ You will need ROS Noetic installed and sourced before using this repo. Installat
 
 1. Install ROS dependencies for our project
 ```
-$ sudo apt-get install ros-noetic-tf2-geometry-msgs ros-noetic-ackermann-msgs ros-noetic-joy ros-noetic-map-server
+$ sudo apt-get install ros-noetic-tf2-geometry-msgs ros-noetic-ackermann-msgs ros-noetic-scan-tools ros-noetic-joy ros-noetic-map-server
 ```
 2. Clone the repository
 ```
 $ git clone https://github.com/Pitt-RAS/ras-f1tenth
+```
+3. Install Eigen
+```
+$ sudo apt install libeigen3-dev
 ```
 3. Initialize submodules
 ```

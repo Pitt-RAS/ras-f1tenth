@@ -9,7 +9,7 @@ include_directories(
 )
 
 add_library( taskpool
-    TaskPool.cc
+    src/TaskPool.cc
 )
 
 set_target_properties(taskpool PROPERTIES VERSION ${PROJECT_VERSION})
