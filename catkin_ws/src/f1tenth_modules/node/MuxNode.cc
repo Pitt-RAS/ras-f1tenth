@@ -1,6 +1,7 @@
 // MAIN FUNCTION FOR MUX NODE
 #include <ros/ros.h>
 #include <ackermann_msgs/AckermannDriveStamped.h>
+#include <std_msgs/Bool.h>
 #include <std_msgs/UInt8.h>
 #include <f1tenth_modules/States.hh>
 
@@ -16,11 +17,15 @@ private:
     ros::Subscriber eBrake;
 
     std::string currState;
+    bool isBrakeSet;
 
     // main drive topic publisher
     void muxIn_cb(const ackermann_msgs::AckermannDriveStamped &msg)
     {
-        muxOut.publish(msg);
+        if(!isBrakeSet)
+            muxOut.publish(msg);
+        else
+            brake();
     }
 
     void switch_cb(const std_msgs::UInt8 &msg)
@@ -79,8 +84,14 @@ private:
         }
     }
 
+    void setBrake(const std_msgs::Bool &msg)
+    {
+        isBrakeSet = msg.data;
+    }
+
 public:
-    Mux()
+    Mux() :
+        isBrakeSet(true)
     {
         // ROS NODE
         n = ros::NodeHandle("~");
@@ -88,6 +99,7 @@ public:
         // Subcribers
         muxController = n.subscribe("/input", 1, &Mux::switch_cb, this);
         muxIn = n.subscribe("", 1, &Mux::muxIn_cb, this);
+        eBrake = n.subscribe("/brake_bool", 1, &Mux::setBrake, this);
 
         // Publishers
         muxOut = n.advertise<ackermann_msgs::AckermannDriveStamped>("/vesc_cmd", 1);
@@ -100,12 +112,7 @@ public:
         drive.header.frame_id = States::Off::NAME;
 
         drive.drive.speed = 0.0;
-        
-        auto i = 0;
-        while (i++<50)
-        {
-            muxOut.publish(drive);
-        }
+        muxOut.publish(drive);
     }
 };
 

@@ -163,6 +163,8 @@ public:
 
     void scan_callback(const sensor_msgs::LaserScan::ConstPtr &scan_msg)
     {
+        brake_msg.brake.data = false;
+
         if( speed != 0)
         {
             // If the array sizes don't match then we won't continue with the scan
@@ -183,7 +185,7 @@ public:
                 {
                     brake_msg.brake.data = true;
                     brake_pub.publish(brake_msg.brake);
-                    
+                
                     // TODO(NMM) : change this to a service 
                     auto i = 0;    
                     while (i++ < 50)
@@ -192,9 +194,12 @@ public:
                     }
             
                     ROS_INFO("E-BRAKE:\t(angle)%f", scan_msg->angle_min +i*scan_msg->angle_increment);
+                    break;
                 }
             }
         }
+
+        brake_pub.publish(brake_msg.brake);
     }
 };
 
