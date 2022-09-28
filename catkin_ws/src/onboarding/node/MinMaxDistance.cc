@@ -24,12 +24,12 @@ public:
         // the topic "/scan" with a buffer size of 1
         // using the callback scan_cb
 
-        // (todo) Initialize the minPub publisher with 
-        // the message type of onboarding::PointDist with a 
+        // (todo) Initialize the minPub publisher to publish on the "/min_point" 
+        // topic and with the message type of onboarding::PointDist with a 
         // queue size of 1
         
-        // (todo) Initialize the maxPub publisher with 
-        // the message type of onboarding::PointDist with a 
+        // (todo) Initialize the maxPub publisher to publish on the "/max_point"
+        // topic and with the message type of onboarding::PointDist with a 
         // queue size of 1
     }
 
