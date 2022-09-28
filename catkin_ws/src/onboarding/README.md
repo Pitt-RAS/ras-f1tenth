@@ -3,7 +3,7 @@ In this simple onboarding package, you will make a node that does three things:
 * Figures out the min and max value from the data sent over the topic along with their respective angles
 * Publishes to two topics "/min_point" and "max_point" with their respective distance and corresponding angles
 
-Make sure you forked repository has https://github.com/Pitt-RAS/ras-f1tenth set as upstream.
+Make sure you forked repository has https://github.com/Pitt-RAS/ras-f1tenth set as upstream <br>
 ```$ git remote -v```
 
 If you don't see 
