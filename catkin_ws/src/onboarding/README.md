@@ -6,7 +6,7 @@ In this simple onboarding package, you will make a node that does three things:
 Make sure you forked repository has https://github.com/Pitt-RAS/ras-f1tenth set as upstream <br>
 ```$ git remote -v```
 
-If you don't see..
+If you don't see
 ```
 upstream https://github.com/Pitt-RAS/ras-f1tenth (fetch)
 upstream https://github.com/Pitt-RAS/ras-f1tenth (push)
