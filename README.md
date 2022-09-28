@@ -58,6 +58,10 @@ Run any of the launch files found in [this](https://github.com/Pitt-RAS/F1Tenth_
 $ roslaunch f1tenth_modules <launch file>
 ```
 
+## Onboarding
+
+Check the <a href="https://github.com/Pitt-RAS/ras-f1tenth/tree/onboarding/catkin_ws/src/onboarding">onboarding</a> package within the onboarding branch of this repository and follow the instructions listed in the README
+
 
 ## Introduction to ROS - Part 1
 
