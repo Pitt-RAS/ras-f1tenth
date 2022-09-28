@@ -3,7 +3,7 @@ In this simple onboarding package, you will make a node that does three things:
 * Figures out the min and max value from the data sent over the topic along with their respective angles
 * Publishes to two topics "/min_point" and "max_point" with their respective distance and corresponding angles
 
-The boiler plate source can be found in node/MinMaxDistance.cc.
+The boiler plate source can be found in <a href="https://github.com/Pitt-RAS/ras-f1tenth/tree/main/catkin_ws/src/onboarding/node">node/MinMaxDistance.cc</a>.
 
 
 Make sure you forked repository has https://github.com/Pitt-RAS/ras-f1tenth set as the upstream <br>
