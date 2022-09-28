@@ -24,6 +24,11 @@ $ git checkout main
 $ git pull upstream main
 ```
 
+Checkout the onboarding branch
+```
+$ git checkout onboarding
+```
+
 Work on the task!
 
 Be sure to commit as frequently as possible. When you're finished with the implementation
