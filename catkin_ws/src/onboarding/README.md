@@ -24,9 +24,6 @@ $ git checkout main
 $ git pull upstream main
 ```
 
-Checkout a branch to work on the onboarding task:<br>
-```$ git checkout -b onboarding-task # You can name the branch w/e you'd like```
-
 Work on the task!
 
 Be sure to commit as frequently as possible. When you're finished with the implementation
