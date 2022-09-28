@@ -20,7 +20,7 @@ then run this command
 
 Update your the main branch in your fork<br>
 ```
-% git checkout main 
+$ git checkout main 
 $ git pull upstream main
 ```
 
