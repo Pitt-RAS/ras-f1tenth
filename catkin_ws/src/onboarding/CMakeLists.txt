@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(f1tenth_modules)
+project(onboarding)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -9,21 +9,14 @@ project(f1tenth_modules)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  rospy
+  sensor_msgs
   std_msgs
   message_generation
-  roslaunch
-  tf2
-  tf2_ros
-  tf2_geometry_msgs
-  rosbag
 )
 
-roslaunch_add_file_check(launch)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
-add_subdirectory(lib/TaskPool)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -58,7 +51,6 @@ add_subdirectory(lib/TaskPool)
 add_message_files(
   FILES
   PointDist.msg
-  PidInfo.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -78,6 +70,7 @@ add_message_files(
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
+  sensor_msgs
   std_msgs
 )
 
@@ -111,8 +104,8 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
- INCLUDE_DIRS include
- LIBRARIES f1tenth_modules
+#  INCLUDE_DIRS include
+#  LIBRARIES onboarding
  CATKIN_DEPENDS roscpp sensor_msgs std_msgs message_runtime
 #  DEPENDS system_lib
 )
@@ -124,14 +117,13 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  # include
   ${catkin_INCLUDE_DIRS}
-  include
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/f1tenth_modules.cpp
+#   src/${PROJECT_NAME}/onboarding.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -139,34 +131,11 @@ include_directories(
 ## either from message generation or dynamic reconfigure
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-set( sources
-  src/RvizWrapper.cc
-  src/F1tenthUtils.cc
-)
-
-set( src_nodes
-  node/PointDist.cc
-  node/SafetyNode.cc
-  node/WallFollowing.cc
-  node/GapFollowing.cc
-  node/MuxNode.cc
-  node/KeyInput.cc
-  node/JoyStick.cc
-)
-
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-foreach( src_file ${src_nodes} )
-  get_filename_component(src_name ${src_file} NAME_WE)
-  add_executable(${src_name} ${src_file} ${sources})
-  target_link_libraries(${src_name}
-    ${catkin_LIBRARIES}
-    taskpool
-    )
-    add_dependencies(${src_name} f1tenth_modules_generate_messages_cpp)
-endforeach()
-
+add_executable(min_max_node node/MinMaxDistance.cc)
+target_link_libraries(min_max_node ${catkin_LIBRARIES})
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -179,9 +148,8 @@ endforeach()
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(
+# target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
-#   taskpool
 # )
 
 #############
@@ -231,7 +199,7 @@ endforeach()
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_f1tenth_modules.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_onboarding.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
