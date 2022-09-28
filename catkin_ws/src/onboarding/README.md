@@ -17,6 +17,9 @@ upstream https://github.com/Pitt-RAS/ras-f1tenth (push)
 then run this command
 ```$ git remote add upstream https://github.com/Pitt-RAS/ras-f1tenth```
 
+Update your fork<br>
+```$ git pull upstream main```
+
 Checkout a branch to work on the onboarding task:<br>
 ```$ git checkout -b onboarding-task # You can name the branch w/e you'd like```
 
