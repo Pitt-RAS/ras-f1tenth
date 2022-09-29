@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+
+    <arg name="dev" default="/dev/input/js0" />
+
+    <!-- Joy stick driver-->
+    <node pkg="joy" name="joy" type="joy_node">
+        <param name="dev" value="$(arg dev)" /> <!-- Customize this to match the location your joystick is plugged in on-->
+        <param name="deadzone" value="0.2" />
+        <param name="autorepeat_rate" value="40" />
+        <param name="coalesce_interval" value="0.025" />
+    </node>
+
+    <!-- Launch joystick converter-->
+    <node pkg="f1tenth_modules" name="JoyStick" type="JoyStick" output="screen"/>
+
+</launch>

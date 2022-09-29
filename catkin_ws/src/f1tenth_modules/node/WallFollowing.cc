@@ -57,7 +57,7 @@ class WallFollowing
         pidGains gains;
         lidarIntrinsics lidarData;
 
-        std::unique_ptr<RvizPoint> rvizPoint;
+        std::unique_ptr<RvizLineList> rvizPoint;
         std::unique_ptr<TaskPool> task_manager;
 
         int muxIdx;
@@ -127,8 +127,13 @@ class WallFollowing
             rvizOpts opts =
                 {.color=0x00ff00, .frame_id="laser_model", .ns="point",
                  .pose=pose, .scale=scale, .topic="/dynamic_viz"};
-            rvizPoint = std::make_unique<RvizPoint>(n, opts);
+
+            rvizPoint = std::make_unique<RvizLineList>(n, opts);
             rvizPoint->addTransformPair("base_link", "laser_model");
+
+            geometry_msgs::Vector3 v;
+            v.x = 0.05;
+            rvizPoint->changeScale(v);
 
             task_manager = std::make_unique<TaskPool>();
             task_manager->start();

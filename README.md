@@ -20,7 +20,7 @@ Try and keep your coding style consistent.
 Update your local packages if you haven't alraedy by running ```$ sudo apt-get update```
 You will need ROS Noetic installed and sourced before using this repo. Installation guide can be found [here](http://wiki.ros.org/noetic/Installation/Ubuntu).
 
-1. Install ROS dependencies
+1. Install ROS dependencies for our project
 ```
 $ sudo apt-get install ros-noetic-tf2-geometry-msgs ros-noetic-ackermann-msgs ros-noetic-joy ros-noetic-map-server
 ```
@@ -57,6 +57,10 @@ Run any of the launch files found in [this](https://github.com/Pitt-RAS/F1Tenth_
 ```
 $ roslaunch f1tenth_modules <launch file>
 ```
+
+## Onboarding
+
+Check the <a href="https://github.com/Pitt-RAS/ras-f1tenth/tree/onboarding/catkin_ws/src/onboarding">onboarding</a> package within the onboarding branch of this repository and follow the instructions listed in the README
 
 
 ## Introduction to ROS - Part 1

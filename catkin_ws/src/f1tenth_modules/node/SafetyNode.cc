@@ -1,11 +1,13 @@
 #include <ros/ros.h>
+
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/LaserScan.h>
-// TODO: include ROS msg type headers and libraries
-#include <f1tenth_modules/F1tenthUtils.hh>
 #include <ackermann_msgs/AckermannDriveStamped.h>
 #include <std_msgs/Bool.h>
+
 #include <cmath>
+
+#include <f1tenth_modules/F1tenthUtils.hh>
 
 #define PI M_PI
 
@@ -64,8 +66,8 @@ std::vector<double> compute_car_perim(
     return car_perim;
 }
 
-class Safety {
 // The class that handles emergency braking
+class Safety {
 private:
     ros::NodeHandle n;
 
@@ -86,24 +88,21 @@ private:
     } brake_msg;
 
 public:
-    Safety()
+    Safety() :
+        n(ros::NodeHandle("~"))
     {
         ROS_INFO("Initializing emergency brake configs.");
-        n = ros::NodeHandle("~");
         speed = 0.0;
 
         // Initialize brake message
         brake_msg.brake.data = false;
         brake_msg.speed.drive.speed = 0.0;
 
-
-        // n.getParam("scan_beams", lidar.num_scans);
-
         // Listening to one scan message to grab LIDAR instrinsics
         boost::shared_ptr<const sensor_msgs::LaserScan>
             shared = ros::topic::waitForMessage<sensor_msgs::LaserScan>("/scan", n, ros::Duration(10));
 
-        if( shared != NULL )
+        if (shared != NULL)
         {
             lidar.scan_inc = shared->angle_increment;
             lidar.max_angle = shared->angle_max;
@@ -122,7 +121,6 @@ public:
             ROS_INFO("");
         }
 
-
         /*
         One publisher should publish to the /brake topic with an
         ackermann_msgs/AckermannDriveStamped brake message.
@@ -140,18 +138,15 @@ public:
         NOTE that the x component of the linear velocity in odom is the speed
         */
 
-        // [ Pubs ]
-            /* Brake-bool Publisher */
+        //  Pubs 
         brake_pub = n.advertise<std_msgs::Bool>("/brake_bool", 1);
-            /* Brake-speed Publisher */
         speed_pub = n.advertise<ackermann_msgs::AckermannDriveStamped>("/brake", 1);
 
-        // [ Subs ]
-            /* Scan Subscriber*/
+        //  Subs 
         scan_sub = n.subscribe("/scan", 1, &Safety::scan_callback, this);
-            /* Odom Subscriber */
         odom_sub = n.subscribe("/odom", 1, &Safety::odom_callback, this);
 
+        // Extract parameters
         n.getParam("width", car.width);
         n.getParam("scan_distance_to_base_link", car.base_link);
         n.getParam("wheelbase", car.wheelbase);
@@ -178,23 +173,25 @@ public:
                 return;
             }
 
-            // Calculating TTC for each scan increment.
+            // Calculating TTC for each scan increment
             for( size_t i = 0 ; i < scan_msg->ranges.size(); i++ )
             {
                 auto r_hat = speed*std::cos(i*scan_msg->angle_increment + scan_msg->angle_min);
-
                 auto ttc = (scan_msg->ranges[i] - car_perimeter[i])/r_hat;
 
                 if( ttc < ttc_threshold  && (ttc>=0.0))
                 {
-                    // if(!brake_msg.brake.data)
-                    // {
-
                     brake_msg.brake.data = true;
-                    speed_pub.publish(brake_msg.speed);
                     brake_pub.publish(brake_msg.brake);
+                    
+                    // TODO(NMM) : change this to a service 
+                    auto i = 0;    
+                    while (i++ < 50)
+                    {
+                        speed_pub.publish(brake_msg.speed);
+                    }
+            
                     ROS_INFO("E-BRAKE:\t(angle)%f", scan_msg->angle_min +i*scan_msg->angle_increment);
-                    // }
                 }
             }
         }

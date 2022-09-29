@@ -113,7 +113,7 @@ generate_messages(
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES f1tenth_modules
- CATKIN_DEPENDS roscpp std_msgs message_runtime
+ CATKIN_DEPENDS roscpp sensor_msgs std_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -151,6 +151,7 @@ set( src_nodes
   node/GapFollowing.cc
   node/MuxNode.cc
   node/KeyInput.cc
+  node/JoyStick.cc
 )
 
 ## Declare a C++ executable
