@@ -21,7 +21,7 @@ Update your the main branch in your fork<br>
 ```
 $ git checkout main 
 $ git pull upstream main
-$ git fetch upstream main
+$ git fetch upstream 
 ```
 
 Checkout the onboarding branch
