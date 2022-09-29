@@ -29,6 +29,7 @@ $ git checkout onboarding
 ```
 
 Work on the task!<br>
+Here is a reference to the ROS <a href="http://wiki.ros.org/ROS/Tutorials" target="_blank">tutorials</a><br>
 The boiler plate source can be found in <a href="https://github.com/Pitt-RAS/ras-f1tenth/tree/onboarding/catkin_ws/src/onboarding/node">catkin_ws/src/onboarding/node/MinMaxDistance.cc</a>.<br>
 Be sure to commit as frequently as possible. 
 When you're finished with the implementation
