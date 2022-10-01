@@ -29,7 +29,7 @@
 // Custom libraries and messages
 #include <f1tenth_modules/F1tenthUtils.hh>
 #include <f1tenth_modules/RvizWrapper.hh>
-#include <taskpool/TaskPool.hh>
+
 #include <f1tenth_modules/PidInfo.h>
 
 
@@ -58,7 +58,6 @@ class WallFollowing
         lidarIntrinsics lidarData;
 
         std::unique_ptr<RvizLineList> rvizPoint;
-        std::unique_ptr<TaskPool> task_manager;
 
         int muxIdx;
         int aIdx, bIdx;
