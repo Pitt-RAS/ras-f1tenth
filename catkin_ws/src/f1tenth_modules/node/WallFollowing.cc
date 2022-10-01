@@ -188,9 +188,21 @@ class WallFollowing
         void lidar_cb(const sensor_msgs::LaserScan &msg)
         {
             /////!!!!! NEED TO FILTER FOR BAD DISTANCES (inf &&&& <0)
+            
             auto a = msg.ranges[aIdx];
             auto b = msg.ranges[bIdx];
 
+            if (std::isinf(a) || std::isinf(b))
+            {
+                ROS_WARN("bad lidar values");
+                return;
+            }
+
+            if (a < msg.range_min || b < msg.range_min)
+            {
+                ROS_WARN("bad lidar values");
+            }
+            
             geometry_msgs::Point point_a, point_b;
 
             auto a_angle = aIdx*msg.angle_increment + msg.angle_min;
