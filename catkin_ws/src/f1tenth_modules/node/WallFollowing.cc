@@ -69,6 +69,7 @@ class WallFollowing
         double L;
         double dt;
         double theta = 40.0*M_PI/180.0; // [theta = 20 deg] (0 < theta < 70deg)
+        double steer_angle_max = 30.0*M_PI/180.0;
 
         bool enabled, done;
         bool useSimulator; 
@@ -229,9 +230,13 @@ class WallFollowing
             // PID Controller
             p = err;
             i += err*dt; // may need to be clamped
+            if (i > steer_angle_max)
+                i = steer_angle_max;
             d = (err-prevErr)/dt;
 
-            const auto steer_angle = -(gains.kp*p + gains.ki*i + gains.kd*d);
+            auto steer_angle = -(gains.kp*p + gains.ki*i + gains.kd*d);
+            if (steer_angle > steer_angle_max)
+                steer_angle = steer_angle_max;
             const auto steer_ang_deg = steer_angle*(180.0/M_PI);
             const auto abs_steer_ang_deg = std::abs(steer_ang_deg);
 
