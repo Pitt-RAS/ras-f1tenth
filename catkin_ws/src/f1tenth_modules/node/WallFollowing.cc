@@ -202,7 +202,7 @@ class WallFollowing
             {
                 ROS_WARN("bad lidar values");
             }
-            
+
             geometry_msgs::Point point_a, point_b;
 
             auto a_angle = aIdx*msg.angle_increment + msg.angle_min;
@@ -217,7 +217,8 @@ class WallFollowing
             point_a.z = point_b.z = 0.0;
             std::vector<geometry_msgs::Point> points = {point_a, point_b};
 
-            rvizPoint->addTranslation(points);
+            if (useSimulator)
+                rvizPoint->addTranslation(points);
 
             auto alpha = std::atan((a*std::cos(theta)-b)/(a*std::sin(theta)));
             auto dist_1 = (b*std::cos(alpha)) + (drive.drive.speed*dt)*std::sin(alpha);
@@ -252,6 +253,7 @@ class WallFollowing
             const auto steer_ang_deg = steer_angle*(180.0/M_PI);
             const auto abs_steer_ang_deg = std::abs(steer_ang_deg);
 
+            ROS_INFO("STEERING ANGLE: %f", steer_angle);
             //
             // TODO: Change these limits to compare against radians to minimize conversions
             //
