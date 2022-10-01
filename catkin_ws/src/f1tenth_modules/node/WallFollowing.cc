@@ -194,13 +194,13 @@ class WallFollowing
 
             if (std::isinf(a) || std::isinf(b))
             {
-                ROS_WARN("bad lidar values");
+                ROS_WARN("bad lidar values (inf)");
                 return;
             }
 
             if (a < msg.range_min || b < msg.range_min)
             {
-                ROS_WARN("bad lidar values");
+                ROS_WARN("bad lidar values (min range)");
             }
 
             geometry_msgs::Point point_a, point_b;
