@@ -15,11 +15,13 @@
 #include <ros/ros.h>
 #include <rosbag/bag.h>
 
-#include <std_msgs/Float64.h>
+// Message Headers
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/LaserScan.h>
 #include <ackermann_msgs/AckermannDriveStamped.h>
 #include <ackermann_msgs/AckermannDrive.h>
+#include <std_msgs/Float64.h>
+#include <std_msgs/UInt8.h>
 #include <std_msgs/Int32MultiArray.h>
 
 // TF2
@@ -29,7 +31,7 @@
 // Custom libraries and messages
 #include <f1tenth_modules/F1tenthUtils.hh>
 #include <f1tenth_modules/RvizWrapper.hh>
-
+#include <f1tenth_modules/States.hh>
 #include <f1tenth_modules/PidInfo.h>
 
 
@@ -69,12 +71,13 @@ class WallFollowing
         double theta = 40.0*M_PI/180.0; // [theta = 20 deg] (0 < theta < 70deg)
 
         bool enabled, done;
+        bool useSimulator; 
 
     public:
         WallFollowing() = delete;
         WallFollowing(double rate):
             dt(1/rate),
-            enabled(false), done(false),
+            enabled(false), done(false), useSimulator(false),
             prevErr(0.0),
             p(0.0), i(0.0), d(0.0),
             tfListener(tBuffer),
@@ -83,10 +86,16 @@ class WallFollowing
             // Extract  lidar info from one message
             lidarData = getLidarInfoFromTopic(n, "/scan");
             if (!lidarData.valid)
+            {
+                ROS_ERROR("Could not read from the \"/scan\" topic.");
                 exit(-1);
+            }
+                
 
+            n.getParam("autonomous_drive_topic", driveTopic);
             n.getParam("wall_follow_idx", muxIdx);
-            n.getParam("wall_follow_topic", driveTopic);
+            n.getParam("use_simulator", useSimulator);
+
             n.getParam("kp", gains.kp);
             n.getParam("ki", gains.ki);
             n.getParam("kd", gains.kd);
@@ -103,12 +112,23 @@ class WallFollowing
 
             // subs
             scanSub = n.subscribe("/scan", 1, &WallFollowing::lidar_cb, this);
-            muxSub = n.subscribe("/mux", 1, &WallFollowing::mux_cb, this);
+            
+            if(useSimulator)
+            {
+                muxSub = n.subscribe("/mux", 1, &WallFollowing::mux_cb, this);
+                ROS_INFO("(WALL FOLLOWING): using simulator");
+            }
+            else
+            {
+                muxSub = n.subscribe("/input", 1, &WallFollowing::key_input, this);
+                ROS_INFO("(WALL FOLLOWING): not using simulator");
+            }
 
             // We want this index the angle thats orthogonally
             // to the left of the front of the car _|
             bIdx = getScanIdx(M_PI/2.0, lidarData);
             aIdx = getScanIdx((M_PI/2.0)-theta, lidarData);
+            
             ROS_INFO("Scanning data at angles %f - %f",
                 lidarData.min_angle + (lidarData.scan_inc*aIdx),
                 lidarData.min_angle + (lidarData.scan_inc*bIdx));
@@ -134,9 +154,6 @@ class WallFollowing
             v.x = 0.05;
             rvizPoint->changeScale(v);
 
-            task_manager = std::make_unique<TaskPool>();
-            task_manager->start();
-
             pidHeader.frame_id = "pid_info";
         }
 
@@ -153,6 +170,17 @@ class WallFollowing
                 ROS_INFO("PID node disabled.");
 
             // (TODO) Maybe reset the PID values when "else"
+        }
+
+        void key_input(const std_msgs::UInt8 &msg)
+        {
+            if(msg.data == States::WallFollowing::INPUT_CHAR)
+            {
+                enabled = true;
+                ROS_INFO("PID enablaed");
+            }    
+            else 
+                enabled = false;
         }
 
         void lidar_cb(const sensor_msgs::LaserScan &msg)

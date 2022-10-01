@@ -10,13 +10,16 @@
  */
 #include <ros/ros.h>
 
+// Message Headers
 #include <sensor_msgs/LaserScan.h>
 #include <ackermann_msgs/AckermannDriveStamped.h>
 #include <ackermann_msgs/AckermannDrive.h>
 #include <std_msgs/Int32MultiArray.h>
+#include <std_msgs/UInt8.h>
 
 #include <f1tenth_modules/RvizWrapper.hh>
 #include <f1tenth_modules/F1tenthUtils.hh>
+#include <f1tenth_modules/States.hh>
 
 class GapFollowing
 {
@@ -36,7 +39,9 @@ class GapFollowing
         double dispThreshold, dispBufferAngle;
         int muxIdx;
         int scanStartIdx, scanEndIdx;
+        
         bool enabled;
+        bool use_simulator;
 
         std::unique_ptr<RvizPoint> bubble;
         std::unique_ptr<RvizPoint> cp;
@@ -46,7 +51,7 @@ class GapFollowing
     public:
 
     GapFollowing():
-        enabled(false),
+        enabled(false), use_simulator(false),
         n(ros::NodeHandle("~"))
     {
         lidarData = getLidarInfoFromTopic(n, "/scan");
@@ -64,7 +69,17 @@ class GapFollowing
 
         // subs
         scanSub = n.subscribe("/scan", 1, &GapFollowing::scan_cb, this);
-        muxSub = n.subscribe("/mux", 1, &GapFollowing::mux_cb, this);
+
+        if (use_simulator)
+        {
+            muxSub = n.subscribe("/mux", 1, &GapFollowing::mux_cb, this);
+            ROS_INFO("(GAP FOLLOWING): not ussing simulator.");
+        }
+        else 
+        {
+            muxSub = n.subscribe("/input", 1, &GapFollowing::key_input, this);
+            ROS_INFO("(GAP FOLLOWING): not using simulator.");
+        }
 
         scanStartIdx = getScanIdx((-M_PI/3.0), lidarData);
         scanEndIdx = getScanIdx((M_PI/3.0), lidarData);
@@ -108,6 +123,14 @@ class GapFollowing
     void mux_cb(const std_msgs::Int32MultiArray &msg)
     {
         enabled = msg.data[muxIdx];
+    }
+
+    void key_input(const std_msgs::UInt8 &msg)
+    {
+        if (msg.data == States::GapFollowing::INPUT_CHAR)
+            enabled = true;
+        else
+            enabled = false;
     }
 
     void scan_cb(const sensor_msgs::LaserScan &msg)
