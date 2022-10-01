@@ -106,6 +106,7 @@ class WallFollowing
             ROS_INFO("");
 
             // pubs
+            ROS_INFO("wall following: publishing to %s", driveTopics);
             drivePub = n.advertise<ackermann_msgs::AckermannDriveStamped>(driveTopic, 1);
             markerPub = n.advertise<visualization_msgs::Marker>("/dynamic_viz", 10);
             pidPub = n.advertise<f1tenth_modules::PidInfo>("/pid_info", 10);
