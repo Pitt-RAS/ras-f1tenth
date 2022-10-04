@@ -202,7 +202,7 @@ class WallFollowing
             i += err*dt; // may need to be clamped
             d = (err-prevErr)/dt;
 
-            const auto steer_angle = -(gains.kp*p + gains.ki*i + gains.kd*d);
+            const auto steer_angle = (gains.kp*p + gains.ki*i + gains.kd*d);
             const auto steer_ang_deg = steer_angle*(180.0/M_PI);
             const auto abs_steer_ang_deg = std::abs(steer_ang_deg);
 
