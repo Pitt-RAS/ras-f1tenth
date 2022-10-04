@@ -134,9 +134,6 @@ class WallFollowing
             v.x = 0.05;
             rvizPoint->changeScale(v);
 
-            task_manager = std::make_unique<TaskPool>();
-            task_manager->start();
-
             pidHeader.frame_id = "pid_info";
         }
 
