@@ -72,7 +72,8 @@ private:
     ros::NodeHandle n;
 
     ros::Subscriber scan_sub, odom_sub;
-    ros::Publisher brake_pub, speed_pub;
+    ros::Publisher brake_pub;
+    // , speed_pub;
 
     // Info to perform emergency braking
     std::vector<double> car_perimeter;
@@ -140,7 +141,7 @@ public:
 
         //  Pubs 
         brake_pub = n.advertise<std_msgs::Bool>("/brake_bool", 1);
-        speed_pub = n.advertise<ackermann_msgs::AckermannDriveStamped>("/brake", 1);
+        // speed_pub = n.advertise<ackermann_msgs::AckermannDriveStamped>("/brake", 1);
 
         //  Subs 
         scan_sub = n.subscribe("/scan", 1, &Safety::scan_callback, this);
@@ -185,11 +186,11 @@ public:
                     brake_pub.publish(brake_msg.brake);
                     
                     // TODO(NMM) : change this to a service 
-                    auto i = 0;    
-                    while (i++ < 50)
-                    {
-                        speed_pub.publish(brake_msg.speed);
-                    }
+                    // auto i = 0;    
+                    // while (i++ < 50)
+                    // {
+                    //     speed_pub.publish(brake_msg.speed);
+                    // }
             
                     ROS_INFO("E-BRAKE:\t(angle)%f", scan_msg->angle_min +i*scan_msg->angle_increment);
                 }

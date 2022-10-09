@@ -29,7 +29,7 @@
 // Custom libraries and messages
 #include <f1tenth_modules/F1tenthUtils.hh>
 #include <f1tenth_modules/RvizWrapper.hh>
-#include <taskpool/TaskPool.hh>
+
 #include <f1tenth_modules/PidInfo.h>
 
 
@@ -58,7 +58,6 @@ class WallFollowing
         lidarIntrinsics lidarData;
 
         std::unique_ptr<RvizLineList> rvizPoint;
-        std::unique_ptr<TaskPool> task_manager;
 
         int muxIdx;
         int aIdx, bIdx;
@@ -135,9 +134,6 @@ class WallFollowing
             v.x = 0.05;
             rvizPoint->changeScale(v);
 
-            task_manager = std::make_unique<TaskPool>();
-            task_manager->start();
-
             pidHeader.frame_id = "pid_info";
         }
 
@@ -203,7 +199,7 @@ class WallFollowing
             i += err*dt; // may need to be clamped
             d = (err-prevErr)/dt;
 
-            const auto steer_angle = -(gains.kp*p + gains.ki*i + gains.kd*d);
+            const auto steer_angle = (gains.kp*p + gains.ki*i + gains.kd*d);
             const auto steer_ang_deg = steer_angle*(180.0/M_PI);
             const auto abs_steer_ang_deg = std::abs(steer_ang_deg);
 

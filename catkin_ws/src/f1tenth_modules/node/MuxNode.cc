@@ -1,7 +1,11 @@
 // MAIN FUNCTION FOR MUX NODE
 #include <ros/ros.h>
+
+// Message Headers
 #include <ackermann_msgs/AckermannDriveStamped.h>
 #include <std_msgs/UInt8.h>
+#include <std_msgs/Bool.h>
+
 #include <f1tenth_modules/States.hh>
 
 class Mux
@@ -79,6 +83,19 @@ private:
         }
     }
 
+    // This listens to the "brake_bool" topic that publishes a boolean value.
+    // If we get a true value, we shutdown the muxIn subscriber and we
+    //  publish a break message
+    // If it's false, do not override the muxIn subscriber.
+    void brake_cb(const std_msgs::Bool &msg)
+    {
+        if(msg.data)
+        {
+            muxIn.shutdown();
+            brake();
+        }
+    }
+
 public:
     Mux()
     {
@@ -87,7 +104,8 @@ public:
 
         // Subcribers
         muxController = n.subscribe("/input", 1, &Mux::switch_cb, this);
-        muxIn = n.subscribe("", 1, &Mux::muxIn_cb, this);
+        muxIn = n.subscribe("", 1, &Mux::muxIn_cb, this); 
+        eBrake = n.subscribe("/brake_bool", 1, &Mux::brake_cb, this);
 
         // Publishers
         muxOut = n.advertise<ackermann_msgs::AckermannDriveStamped>("/vesc_cmd", 1);
