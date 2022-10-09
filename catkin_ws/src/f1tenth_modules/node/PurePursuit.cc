@@ -9,7 +9,7 @@ private:
     // TODO: create ROS subscribers and publishers
 
 public:
-    Safety() {
+    PurePursuit() {
         n = ros::NodeHandle();
 
         // TODO: create ROS subscribers and publishers
@@ -27,6 +27,7 @@ public:
     }
 
 };
+
 int main(int argc, char ** argv) {
     ros::init(argc, argv, "pure_pursuit_node");
     PurePursuit pp;
