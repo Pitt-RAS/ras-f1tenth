@@ -13,6 +13,7 @@ public:
         n = ros::NodeHandle();
 
         // TODO: create ROS subscribers and publishers
+        // Subscribe to "/gt_pose" (don't worry about any publisher for now)
 
     }
 
