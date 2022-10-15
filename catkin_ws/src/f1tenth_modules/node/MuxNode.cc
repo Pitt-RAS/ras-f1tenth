@@ -58,7 +58,7 @@ private:
                     break;
 
                 muxIn.shutdown();
-                muxIn = n.subscribe(States::WallFollowing::DRIVE_TOPIC, 1, &Mux::muxIn_cb, this);
+                muxIn = n.subscribe(States::Autonmous::DRIVE_TOPIC, 1, &Mux::muxIn_cb, this);
                 ROS_INFO("Switching to state %s", States::WallFollowing::NAME.c_str());
                 currState = States::WallFollowing::NAME;
 

@@ -15,11 +15,13 @@
 #include <ros/ros.h>
 #include <rosbag/bag.h>
 
-#include <std_msgs/Float64.h>
+// Message Headers
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/LaserScan.h>
 #include <ackermann_msgs/AckermannDriveStamped.h>
 #include <ackermann_msgs/AckermannDrive.h>
+#include <std_msgs/Float64.h>
+#include <std_msgs/UInt8.h>
 #include <std_msgs/Int32MultiArray.h>
 
 // TF2
@@ -29,7 +31,7 @@
 // Custom libraries and messages
 #include <f1tenth_modules/F1tenthUtils.hh>
 #include <f1tenth_modules/RvizWrapper.hh>
-
+#include <f1tenth_modules/States.hh>
 #include <f1tenth_modules/PidInfo.h>
 
 
@@ -67,14 +69,16 @@ class WallFollowing
         double L;
         double dt;
         double theta = 40.0*M_PI/180.0; // [theta = 20 deg] (0 < theta < 70deg)
+        double steer_angle_max = 30.0*M_PI/180.0;
 
         bool enabled, done;
+        bool useSimulator; 
 
     public:
         WallFollowing() = delete;
         WallFollowing(double rate):
             dt(1/rate),
-            enabled(false), done(false),
+            enabled(false), done(false), useSimulator(false),
             prevErr(0.0),
             p(0.0), i(0.0), d(0.0),
             tfListener(tBuffer),
@@ -83,10 +87,16 @@ class WallFollowing
             // Extract  lidar info from one message
             lidarData = getLidarInfoFromTopic(n, "/scan");
             if (!lidarData.valid)
+            {
+                ROS_ERROR("Could not read from the \"/scan\" topic.");
                 exit(-1);
+            }
+                
 
+            n.getParam("autonomous_drive_topic", driveTopic);
             n.getParam("wall_follow_idx", muxIdx);
-            n.getParam("wall_follow_topic", driveTopic);
+            n.getParam("use_simulator", useSimulator);
+
             n.getParam("kp", gains.kp);
             n.getParam("ki", gains.ki);
             n.getParam("kd", gains.kd);
@@ -97,18 +107,30 @@ class WallFollowing
             ROS_INFO("");
 
             // pubs
+            ROS_INFO("wall following: publishing to %s", driveTopic);
             drivePub = n.advertise<ackermann_msgs::AckermannDriveStamped>(driveTopic, 1);
             markerPub = n.advertise<visualization_msgs::Marker>("/dynamic_viz", 10);
             pidPub = n.advertise<f1tenth_modules::PidInfo>("/pid_info", 10);
 
             // subs
             scanSub = n.subscribe("/scan", 1, &WallFollowing::lidar_cb, this);
-            muxSub = n.subscribe("/mux", 1, &WallFollowing::mux_cb, this);
+            
+            if(useSimulator)
+            {
+                muxSub = n.subscribe("/mux", 1, &WallFollowing::mux_cb, this);
+                ROS_INFO("(WALL FOLLOWING): using simulator");
+            }
+            else
+            {
+                muxSub = n.subscribe("/input", 1, &WallFollowing::key_input, this);
+                ROS_INFO("(WALL FOLLOWING): not using simulator");
+            }
 
             // We want this index the angle thats orthogonally
             // to the left of the front of the car _|
             bIdx = getScanIdx(M_PI/2.0, lidarData);
             aIdx = getScanIdx((M_PI/2.0)-theta, lidarData);
+            
             ROS_INFO("Scanning data at angles %f - %f",
                 lidarData.min_angle + (lidarData.scan_inc*aIdx),
                 lidarData.min_angle + (lidarData.scan_inc*bIdx));
@@ -152,11 +174,34 @@ class WallFollowing
             // (TODO) Maybe reset the PID values when "else"
         }
 
+        void key_input(const std_msgs::UInt8 &msg)
+        {
+            if(msg.data == States::WallFollowing::INPUT_CHAR)
+            {
+                enabled = true;
+                ROS_INFO("PID enablaed");
+            }    
+            else 
+                enabled = false;
+        }
+
         void lidar_cb(const sensor_msgs::LaserScan &msg)
         {
             /////!!!!! NEED TO FILTER FOR BAD DISTANCES (inf &&&& <0)
+            
             auto a = msg.ranges[aIdx];
             auto b = msg.ranges[bIdx];
+
+            if (std::isinf(a) || std::isinf(b))
+            {
+                ROS_WARN("bad lidar values (inf)");
+                return;
+            }
+
+            if (a < msg.range_min || b < msg.range_min)
+            {
+                ROS_WARN("bad lidar values (min range)");
+            }
 
             geometry_msgs::Point point_a, point_b;
 
@@ -172,7 +217,8 @@ class WallFollowing
             point_a.z = point_b.z = 0.0;
             std::vector<geometry_msgs::Point> points = {point_a, point_b};
 
-            rvizPoint->addTranslation(points);
+            if (useSimulator)
+                rvizPoint->addTranslation(points);
 
             auto alpha = std::atan((a*std::cos(theta)-b)/(a*std::sin(theta)));
             auto dist_1 = (b*std::cos(alpha)) + (drive.drive.speed*dt)*std::sin(alpha);
@@ -197,12 +243,19 @@ class WallFollowing
             // PID Controller
             p = err;
             i += err*dt; // may need to be clamped
+            if (i > steer_angle_max)
+                i = steer_angle_max;
             d = (err-prevErr)/dt;
 
-            const auto steer_angle = (gains.kp*p + gains.ki*i + gains.kd*d);
+
+            auto steer_angle = (gains.kp*p + gains.ki*i + gains.kd*d);
+            if (steer_angle > steer_angle_max)
+                steer_angle = steer_angle_max;
+                
             const auto steer_ang_deg = steer_angle*(180.0/M_PI);
             const auto abs_steer_ang_deg = std::abs(steer_ang_deg);
 
+            ROS_INFO("STEERING ANGLE: %f", steer_angle);
             //
             // TODO: Change these limits to compare against radians to minimize conversions
             //

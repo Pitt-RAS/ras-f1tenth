@@ -10,11 +10,14 @@ scan_distance_to_base_link: 0.275 # meters
 # Lidar simulation parameters
 scan_beams: 1080
 
-wall_follow_topic: "/wall_follow"
 wall_follow_idx: 5
-
-gap_follow_topic: "/nav"
 gap_follow_idx: 6
+
+
+autonomous_drive_topic: "/auto_drive"
+manual_drive_topic: "/manual_drive"
+
+use_simulator: false
 
 disparity_threshold: 1.5 # meters
 disparity_buffer_angle: 0.05 # radians
