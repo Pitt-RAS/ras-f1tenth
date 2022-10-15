@@ -196,7 +196,7 @@ class WallFollowing
 
             if (std::isinf(a) || std::isinf(b))
             {
-                ROS_WARN("bad lidar values (inf)");
+                // ROS_WARN("bad lidar values (inf)");
                 return;
             }
 
@@ -257,7 +257,6 @@ class WallFollowing
             const auto steer_ang_deg = steer_angle*(180.0/M_PI);
             const auto abs_steer_ang_deg = std::abs(steer_ang_deg);
 
-            ROS_INFO("STEERING ANGLE: %f", steer_angle);
             //
             // TODO: Change these limits to compare against radians to minimize conversions
             //
