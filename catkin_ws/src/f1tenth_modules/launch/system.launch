@@ -26,8 +26,6 @@
     </node>
 
     <node pkg="vesc_driver" type="vesc_driver_node" name="vesc_driver" />
-    <node pkg="f1tenth_hardware" type="drive_repeater_node" name="drive_repeater" />
-
 
     <!-- MUX-->
     <node pkg="f1tenth_modules" name="MuxNode" type="MuxNode" output="screen">
