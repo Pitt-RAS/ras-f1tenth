@@ -202,7 +202,8 @@ class WallFollowing
 
             if (a < msg.range_min || b < msg.range_min)
             {
-                ROS_WARN("bad lidar values (min range)");
+                // ROS_WARN("bad lidar values (min range)");
+                return;
             }
 
             geometry_msgs::Point point_a, point_b;
