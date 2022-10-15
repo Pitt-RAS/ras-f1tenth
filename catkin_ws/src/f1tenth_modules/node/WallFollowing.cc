@@ -72,7 +72,7 @@ class WallFollowing
         double steer_angle_max = 30.0*M_PI/180.0;
 
         bool enabled, done;
-        bool useSimulator; 
+        bool useSimulator;
 
     public:
         WallFollowing() = delete;
@@ -91,7 +91,7 @@ class WallFollowing
                 ROS_ERROR("Could not read from the \"/scan\" topic.");
                 exit(-1);
             }
-                
+
 
             n.getParam("autonomous_drive_topic", driveTopic);
             n.getParam("wall_follow_idx", muxIdx);
@@ -114,7 +114,7 @@ class WallFollowing
 
             // subs
             scanSub = n.subscribe("/scan", 1, &WallFollowing::lidar_cb, this);
-            
+
             if(useSimulator)
             {
                 muxSub = n.subscribe("/mux", 1, &WallFollowing::mux_cb, this);
@@ -129,8 +129,7 @@ class WallFollowing
             // We want this index the angle thats orthogonally
             // to the left of the front of the car _|
             bIdx = getScanIdx(M_PI/2.0, lidarData);
-            aIdx = getScanIdx((M_PI/2.0)-theta, lidarData);
-            
+            aIdx = getScanIdx((M_PI/2.0)+theta, lidarData);
             ROS_INFO("Scanning data at angles %f - %f",
                 lidarData.min_angle + (lidarData.scan_inc*aIdx),
                 lidarData.min_angle + (lidarData.scan_inc*bIdx));
@@ -145,16 +144,19 @@ class WallFollowing
             pose.orientation.w = 1.0;
             scale.x = scale.y = 0.2;
 
-            rvizOpts opts =
+            if (useSimulator)
+            {
+                rvizOpts opts =
                 {.color=0x00ff00, .frame_id="laser_model", .ns="point",
                  .pose=pose, .scale=scale, .topic="/dynamic_viz"};
 
-            rvizPoint = std::make_unique<RvizLineList>(n, opts);
-            rvizPoint->addTransformPair("base_link", "laser_model");
+                rvizPoint = std::make_unique<RvizLineList>(n, opts);
+                rvizPoint->addTransformPair("base_link", "laser_model");
 
-            geometry_msgs::Vector3 v;
-            v.x = 0.05;
-            rvizPoint->changeScale(v);
+                geometry_msgs::Vector3 v;
+                v.x = 0.05;
+                rvizPoint->changeScale(v);
+            }
 
             pidHeader.frame_id = "pid_info";
         }
@@ -180,15 +182,15 @@ class WallFollowing
             {
                 enabled = true;
                 ROS_INFO("PID enablaed");
-            }    
-            else 
+            }
+            else
                 enabled = false;
         }
 
         void lidar_cb(const sensor_msgs::LaserScan &msg)
         {
             /////!!!!! NEED TO FILTER FOR BAD DISTANCES (inf &&&& <0)
-            
+
             auto a = msg.ranges[aIdx];
             auto b = msg.ranges[bIdx];
 
@@ -251,7 +253,7 @@ class WallFollowing
             auto steer_angle = (gains.kp*p + gains.ki*i + gains.kd*d);
             if (steer_angle > steer_angle_max)
                 steer_angle = steer_angle_max;
-                
+
             const auto steer_ang_deg = steer_angle*(180.0/M_PI);
             const auto abs_steer_ang_deg = std::abs(steer_ang_deg);
 
