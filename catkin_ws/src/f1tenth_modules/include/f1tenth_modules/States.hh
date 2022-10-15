@@ -36,7 +36,7 @@ namespace States {
 
     namespace Autonmous
     {
-        const std::string NAME = "AUTONMOUS";
+        const std::string NAME = "AUTONOMOUS";
         const std::string DRIVE_TOPIC = "/auto_drive";
     } // namespace Autonmous
 

@@ -246,7 +246,7 @@ class WallFollowing
             // PID Controller
             p = err;
             i += err*dt; // may need to be clamped
-            if (i > steer_angle_max)
+            if (std::abs(i) > steer_angle_max)
                 i = steer_angle_max;
             d = (err-prevErr)/dt;
 

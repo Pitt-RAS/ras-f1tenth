@@ -104,7 +104,7 @@ public:
 
         // Subcribers
         muxController = n.subscribe("/input", 1, &Mux::switch_cb, this);
-        muxIn = n.subscribe("", 1, &Mux::muxIn_cb, this); 
+        muxIn = n.subscribe("", 1, &Mux::muxIn_cb, this);
         eBrake = n.subscribe("/brake_bool", 1, &Mux::brake_cb, this);
 
         // Publishers
@@ -118,7 +118,7 @@ public:
         drive.header.frame_id = States::Off::NAME;
 
         drive.drive.speed = 0.0;
-        
+
         auto i = 0;
         while (i++<50)
         {
