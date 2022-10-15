@@ -39,7 +39,7 @@ class GapFollowing
         double dispThreshold, dispBufferAngle;
         int muxIdx;
         int scanStartIdx, scanEndIdx;
-        
+
         bool enabled;
         bool use_simulator;
 
@@ -75,7 +75,7 @@ class GapFollowing
             muxSub = n.subscribe("/mux", 1, &GapFollowing::mux_cb, this);
             ROS_INFO("(GAP FOLLOWING): not ussing simulator.");
         }
-        else 
+        else
         {
             muxSub = n.subscribe("/input", 1, &GapFollowing::key_input, this);
             ROS_INFO("(GAP FOLLOWING): not using simulator.");
@@ -96,7 +96,9 @@ class GapFollowing
         pose.orientation.w = 1.0;
         scale.x = scale.y = 0.1;
 
-        rvizOpts opts = {
+        if (use_simulator)
+        {
+            rvizOpts opts = {
                             .color=0xff0000,
                             .frame_id="laser",
                             .ns="point",
@@ -105,19 +107,20 @@ class GapFollowing
                             .topic="/dynamic_viz"
                         };
 
-        // These points will be green
-        opts.color=0x00ff00;
-        cp = std::make_unique<RvizPoint>(n, opts);
-        bufferPoints = std::make_unique<RvizLineList>(n, opts);
+            // These points will be green
+            opts.color=0x00ff00;
+            cp = std::make_unique<RvizPoint>(n, opts);
+            bufferPoints = std::make_unique<RvizLineList>(n, opts);
 
-        opts.color=0xff0000;
-        fp = std::make_unique<RvizLine>(n, opts);
-        bubble = std::make_unique<RvizPoint>(n, opts);
+            opts.color=0xff0000;
+            fp = std::make_unique<RvizLine>(n, opts);
+            bubble = std::make_unique<RvizPoint>(n, opts);
 
-        cp->addTransformPair("base_link", "laser");
-        fp->addTransformPair("base_link", "laser");
-        bubble->addTransformPair("base_link", "laser");
-        bufferPoints->addTransformPair("base_link", "laser");
+            cp->addTransformPair("base_link", "laser");
+            fp->addTransformPair("base_link", "laser");
+            bubble->addTransformPair("base_link", "laser");
+            bufferPoints->addTransformPair("base_link", "laser");
+        }
     }
 
     void mux_cb(const std_msgs::Int32MultiArray &msg)
@@ -172,10 +175,13 @@ class GapFollowing
             };
 
         // Rviz
-        closestPoint.p.x = closestPoint.dist*std::cos(closestPoint.angle);
-        closestPoint.p.y = closestPoint.dist*std::sin(closestPoint.angle);
-        closestPoint.p.z = 0.0;
-        cp->addTranslation(closestPoint.p);
+        if (use_simulator)
+        {
+            closestPoint.p.x = closestPoint.dist*std::cos(closestPoint.angle);
+            closestPoint.p.y = closestPoint.dist*std::sin(closestPoint.angle);
+            closestPoint.p.z = 0.0;
+            cp->addTranslation(closestPoint.p);
+        }
 
         // calculate start and end range of the bubble within the scan
         if (closestPoint.dist < rb)
@@ -298,7 +304,8 @@ class GapFollowing
             }
         }
 
-        bufferPoints->addTranslation(bp);
+        if (use_simulator)
+            bufferPoints->addTranslation(bp);
         //////////////
 
         // Find the largest point away from us within the max sequence
@@ -324,9 +331,12 @@ class GapFollowing
         };
 
         // Rviz
-        furthestPoint.p.x = furthestPoint.dist*std::cos(furthestPoint.angle);
-        furthestPoint.p.y = furthestPoint.dist*std::sin(furthestPoint.angle);
-        fp->addTranslation(furthestPoint.p);
+        if (use_simulator)
+        {
+            furthestPoint.p.x = furthestPoint.dist*std::cos(furthestPoint.angle);
+            furthestPoint.p.y = furthestPoint.dist*std::sin(furthestPoint.angle);
+            fp->addTranslation(furthestPoint.p);
+        }
 
         // Set the steering angle to the farthest point
         // (TODO) Set this up to be a helper function with custom structs
