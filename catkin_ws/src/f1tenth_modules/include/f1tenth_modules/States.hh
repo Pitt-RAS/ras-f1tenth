@@ -30,9 +30,15 @@ namespace States {
     namespace Manual
     {
         const std::string NAME = "MANUAL";
-        const std::string DRIVE_TOPIC = "/manual";
+        const std::string DRIVE_TOPIC = "/manual_drive";
         constexpr char INPUT_CHAR = 'm';
     } // namespace Manual
+
+    namespace Autonmous
+    {
+        const std::string NAME = "AUTONMOUS";
+        const std::string DRIVE_TOPIC = "/auto_drive";
+    } // namespace Autonmous
 
     namespace WallFollowing
     {
