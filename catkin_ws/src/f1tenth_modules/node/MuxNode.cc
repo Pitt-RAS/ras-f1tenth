@@ -31,9 +31,9 @@ private:
     {
         // For now, need to manually add a case statement
         // for every new state added to the system.
+        ROS_INFO("Current State: %s", currState);
         switch(msg.data)
         {
-            ROS_INFO("Current State: %s", currState);
             case States::Off::INPUT_CHAR:
                 if (currState == States::Off::NAME)
                     break;
