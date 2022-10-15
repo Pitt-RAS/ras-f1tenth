@@ -33,6 +33,7 @@ private:
         // for every new state added to the system.
         switch(msg.data)
         {
+            ROS_INFO("Current State: %s", currState);
             case States::Off::INPUT_CHAR:
                 if (currState == States::Off::NAME)
                     break;
