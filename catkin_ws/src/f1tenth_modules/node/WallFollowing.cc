@@ -247,9 +247,11 @@ class WallFollowing
                 i = steer_angle_max;
             d = (err-prevErr)/dt;
 
+
             auto steer_angle = (gains.kp*p + gains.ki*i + gains.kd*d);
             if (steer_angle > steer_angle_max)
                 steer_angle = steer_angle_max;
+                
             const auto steer_ang_deg = steer_angle*(180.0/M_PI);
             const auto abs_steer_ang_deg = std::abs(steer_ang_deg);
 
