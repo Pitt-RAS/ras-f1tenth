@@ -18,7 +18,7 @@
     </node>
 
     <node pkg="f1tenth_modules" name="JoyStick" type="JoyStick" output="screen"/>
-    
+
     <!-- Wallfollowing -->
     <arg name="wallfollowing" default="0"/>
     <node pkg="f1tenth_modules" name="WallFollowing" type="WallFollowing" output="screen" if="$(eval arg('wallfollowing') == 1)">
