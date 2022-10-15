@@ -59,7 +59,7 @@ class GapFollowing
             exit(-1);
 
         n.getParam("gap_follow_idx", muxIdx);
-        n.getParam("gap_follow_topic", driveTopic);
+        n.getParam("autonomous_drive_topic", driveTopic);
         n.getParam("rb", rb);
         n.getParam("disparity_threshold", dispThreshold);
         n.getParam("disparity_buffer_angle", dispBufferAngle);
@@ -131,7 +131,10 @@ class GapFollowing
     void key_input(const std_msgs::UInt8 &msg)
     {
         if (msg.data == States::GapFollowing::INPUT_CHAR)
+        {
+            ROS_INFO("Gap Following enabled");
             enabled = true;
+        }
         else
             enabled = false;
     }
