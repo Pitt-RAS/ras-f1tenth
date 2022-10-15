@@ -84,10 +84,10 @@ class GapFollowing
         scanStartIdx = getScanIdx((-M_PI/3.0), lidarData);
         scanEndIdx = getScanIdx((M_PI/3.0), lidarData);
 
-        ROS_INFO("");
-        ROS_INFO("Start index of scan : %d", scanStartIdx);
-        ROS_INFO("End index of scan: %d", scanEndIdx);
-        ROS_INFO("");
+        // ROS_INFO("");
+        // ROS_INFO("Start index of scan : %d", scanStartIdx);
+        // ROS_INFO("End index of scan: %d", scanEndIdx);
+        // ROS_INFO("");
 
         // Rviz configuration
         geometry_msgs::Pose pose;
