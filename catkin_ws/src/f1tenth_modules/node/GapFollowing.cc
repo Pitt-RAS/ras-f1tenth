@@ -350,7 +350,10 @@ class GapFollowing
         drive.drive.speed = 1.5;
 
         if (enabled)
+        {
+            ROS_INFO("Publishing drive message");
             drivePub.publish(drive);
+        }
     }
 };
 
