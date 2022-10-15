@@ -12,12 +12,26 @@
         <param name="coalesce_interval" value="0.025" />
     </node>
 
+    <node pkg="f1tenth_modules" name="JoyStick" type="JoyStick" output="screen"/>
+
+    <!-- RPLidar-->
+    <node pkg="rplidar_ros" type="rplidarNode" name="rplidar_node" />
+
+    <!-- VESC-->
+    <arg name="vesc_config" default="$(find f1tenth_hardware)/config/vesc.yaml" />
+    <rosparam file="$(arg vesc_config)" command="load" />
+
+    <node pkg="vesc_ackermann" type="ackermann_to_vesc_node" name="ackermann_to_vesc" >
+      <remap from="ackermann_cmd" to="vesc_cmd" />
+    </node>
+
+    <node pkg="vesc_driver" type="vesc_driver_node" name="vesc_driver" />
+
     <!-- MUX-->
     <node pkg="f1tenth_modules" name="MuxNode" type="MuxNode" output="screen">
         <!-- ??rosparams??-->
     </node>
 
-    <node pkg="f1tenth_modules" name="JoyStick" type="JoyStick" output="screen"/>
 
     <!-- Wallfollowing -->
     <arg name="wallfollowing" default="0"/>
