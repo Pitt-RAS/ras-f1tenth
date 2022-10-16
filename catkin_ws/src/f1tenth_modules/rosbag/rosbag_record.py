@@ -1,9 +1,8 @@
 import os
 import argparse
+import rostopic
 
 if __name__ == '__main__':
-    ## TODO Check if roscore is active ##
-
     ap = argparse.ArgumentParser()
 
     # Parameters
@@ -15,8 +14,19 @@ if __name__ == '__main__':
     # Check if bag output name exists
     while(f"{args.outfile[0]}.bag" in os.listdir()):
         args.outfile[0] = input("Filename already exists. Please change the name: ")
+        
+    # Check if roscore is running
+    rosIsRunning = False
 
-    input("Press enter to start recording...")
+    while(not rosIsRunning):
+        input("Press enter to start recording...")
+        
+        try:
+            rostopic.get_topic_class('/rosout')
+            rosIsRunning = True
+        except rostopic.ROSTopicIOException as e:
+            rosIsRunning = False
+            print("Roscore needs to be active.")
     
     # Create list of topics for command line
     topicList = ""
