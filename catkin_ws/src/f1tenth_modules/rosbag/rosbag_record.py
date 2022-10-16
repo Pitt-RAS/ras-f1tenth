@@ -12,7 +12,9 @@ if __name__ == '__main__':
 
     args = ap.parse_args()
     
-    ## TODO Check if bag output name exists
+    # Check if bag output name exists
+    while(f"{args.outfile[0]}.bag" in os.listdir()):
+        args.outfile[0] = input("Filename already exists. Please change the name: ")
 
     input("Press enter to start recording...")
     
