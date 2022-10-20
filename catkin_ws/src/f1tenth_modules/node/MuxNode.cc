@@ -19,7 +19,8 @@ private:
     ros::Subscriber muxController;
     ros::Subscriber eBrake;
 
-    std::string currState;
+    std::string currState, masterDriveTopic;
+    bool useSimulator;
 
     // main drive topic publisher
     void muxIn_cb(const ackermann_msgs::AckermannDriveStamped &msg)
@@ -108,8 +109,18 @@ public:
         muxIn = n.subscribe("", 1, &Mux::muxIn_cb, this);
         eBrake = n.subscribe("/brake_bool", 1, &Mux::brake_cb, this);
 
+        n.param("useSimulator", useSimulator, false);
+
+        if (useSimulator)
+        {
+            masterDriveTopic = "/drive";
+            ROS_INFO("MUX: Using simulator drive topic /drive");
+        }
+        else
+            masterDriveTopic = "vesc_cmd";
+
         // Publishers
-        muxOut = n.advertise<ackermann_msgs::AckermannDriveStamped>("/vesc_cmd", 1);
+        muxOut = n.advertise<ackermann_msgs::AckermannDriveStamped>(masterDriveTopic, 1);
     }
 
     void brake()

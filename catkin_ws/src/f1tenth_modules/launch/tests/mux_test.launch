@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <launch>
+    <arg name="use_simulator" default="0"/>
+
     <node pkg="f1tenth_modules" name="KeyInput" type="KeyInput" output="screen"/>
 
     <!-- Launch a map from the maps folder-->
@@ -14,8 +16,20 @@
         <rosparam command="load" file="$(find f1tenth_simulator)/params.yaml"/>
     </node>
 
+    <!-- Joystick-->
+    <arg name="dev" default="/dev/input/js0" />
+    <node pkg="joy" name="joy" type="joy_node">
+        <param name="dev" value="$(arg dev)" /> <!-- Customize this to match the location your joystick is plugged in on-->
+        <param name="deadzone" value="0.2" />
+        <param name="autorepeat_rate" value="40" />
+        <param name="coalesce_interval" value="0.025" />
+    </node>
+    <node pkg="f1tenth_modules" name="JoyStick" type="JoyStick" output="screen"/>
+
     <!-- Launch Mux Node -->
-    <node pkg="f1tenth_modules" name="MuxNode" type="MuxNode" output="screen"/>
+    <node pkg="f1tenth_modules" name="MuxNode" type="MuxNode" output="screen">
+        <param name="useSimulator" type="bool" value="true" if="$(eval arg('use_simulator') == 1)"/>
+    </node>
 
     <!-- Wall Following -->
     <arg name="wallfollowing" default="0"/>

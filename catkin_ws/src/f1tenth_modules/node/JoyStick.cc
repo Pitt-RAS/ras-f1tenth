@@ -16,7 +16,7 @@ private:
 
     ackermann_msgs::AckermannDriveStamped drive;
     std::string id {"joy_node"};
-    std::string pubTopic {"/manual"};
+    std::string pubTopic {"/manual_drive"};
     std::string subTopic {"/joy"};
 
     float maxSpeed;
@@ -48,7 +48,7 @@ public:
         // Speed
         auto x = msg.axes[1];
         // Steering
-        auto y = msg.axes[3];
+        auto y = msg.axes[2];
 
         drive.header.frame_id = id;
         drive.header.stamp = ros::Time::now();
