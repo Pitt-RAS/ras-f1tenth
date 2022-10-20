@@ -1,18 +1,22 @@
 <?xml version="1.0"?>
 <launch>
+    <!-- Custom default arguments used to launch specific nodes-->
     <arg name="use_simulator" default="0"/>
+    <arg name="log_waypoints" default="0"/>
+    <arg name="wallfollowing" default="0"/>
+    <arg name="gapfollowing" default="0"/>
 
     <node pkg="f1tenth_modules" name="KeyInput" type="KeyInput" output="screen"/>
 
     <!-- Launch a map from the maps folder-->
-    <arg name="map" default="$(find f1tenth_simulator)/maps/levine.yaml"/>
+    <arg name="map" default="$(find f1tenth_simulator)/maps/levine.yaml" if="$(eval arg('use_simulator') == 1)"/>
     <node pkg="map_server" name="map_server" type="map_server" args="$(arg map)"/>
 
     <!-- Launch the racecar model -->
-    <include file="$(find f1tenth_simulator)/launch/racecar_model.launch"/>
+    <include file="$(find f1tenth_simulator)/launch/racecar_model.launch" if="$(eval arg('use_simulator') == 1)"/>
 
     <!-- Begin the simulator with the parameters from params.yaml -->
-    <node pkg="f1tenth_simulator" name="f1tenth_simulator" type="simulator" output="screen">
+    <node pkg="f1tenth_simulator" name="f1tenth_simulator" type="simulator" output="screen" if="$(eval arg('use_simulator') == 1)">
         <rosparam command="load" file="$(find f1tenth_simulator)/params.yaml"/>
     </node>
 
@@ -32,17 +36,19 @@
     </node>
 
     <!-- Wall Following -->
-    <arg name="wallfollowing" default="0"/>
     <node pkg="f1tenth_modules" name="WallFollowing" type="WallFollowing" output="screen" if="$(eval arg('wallfollowing') == 1)">
         <rosparam command="load" file="$(find f1tenth_modules)/params.yaml"/>
     </node>
 
     <!-- GapFollowing -->
-    <arg name="gapfollowing" default="0"/>
     <node pkg="f1tenth_modules" name="GapFollowing" type="GapFollowing" output="screen" if="$(eval arg('gapfollowing') == 1)">
         <rosparam command="load" file="$(find f1tenth_modules)/params.yaml"/>
     </node>
 
     <!-- Launch RVIZ -->
-    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find f1tenth_simulator)/launch/simulator.rviz" output="screen"/>
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find f1tenth_simulator)/launch/simulator.rviz" output="screen" if="$(eval arg('use_simulator') == 1)"/>
+
+    <!-- Launch waypoint logger-->
+    <node pkg="f1tenth_modules" name="waypoint_logger" type="waypoint_logger.py" output="screen" if="$(eval arg('log_waypoints') == 1)"/>
+
 </launch>

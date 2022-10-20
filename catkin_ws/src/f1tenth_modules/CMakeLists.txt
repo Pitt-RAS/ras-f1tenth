@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  geometry_msgs
   message_generation
   roslaunch
   tf2
@@ -59,6 +60,7 @@ add_message_files(
   FILES
   PointDist.msg
   PidInfo.msg
+  JoyButtons.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -113,7 +115,7 @@ generate_messages(
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES f1tenth_modules
- CATKIN_DEPENDS roscpp sensor_msgs std_msgs message_runtime
+ CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs message_runtime
 #  DEPENDS system_lib
 )
 
